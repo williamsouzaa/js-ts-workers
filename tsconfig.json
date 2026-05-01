@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "rootDir": "./app",
+    "outDir": "./dist",
+    "noEmit": false,
+    "module": "nodenext",
+    "target": "esnext",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
+    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+  },
+  "include": ["./app/**/*"],
+  "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+}

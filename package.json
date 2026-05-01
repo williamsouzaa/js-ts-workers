@@ -1,0 +1,42 @@
+{
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "aws-sdk-client-mock": "^4.1.0",
+    "esbuild": "^0.28.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.9",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "name": "teste",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build:oneScriptJS": "node esbuild.config.js",
+    "ts:build": "tsc",
+    "ts:check": "tsc --noEmit",
+    "start:app": "node dist/index.js",
+    "start:tsx": "tsx app/index.ts",
+    "server:dev": "NODE_ENV=local node --watch-path=./app --import tsx app/index.ts",
+    "test": "jest --passWithNoTests --silent --noStackTrace --runInBand",
+    "test:verbose": "jest --passWithNoTests --runInBand",
+    "test:unit": "npm test -- --watch -c jestUnit.config.js",
+    "test:integration": "npm test -- --watch -c jestIntegration.config.js",
+    "test:ci": "npm test -- --coverage",
+    "test:staged": "npm test -- --findRelatedTests",
+    "test:file": "jest --runTestsByPath",
+    "test:clearCache": "jest --clearCache"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.1037.0",
+    "express": "~5.2.1",
+    "redis": "^5.12.1"
+  }
+}
