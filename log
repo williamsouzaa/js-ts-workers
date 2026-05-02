@@ -1,0 +1,68 @@
+Map(7) {
+  'efinanceira#12345678000199#003#2026#3' => Map(3) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(2) {
+        'ID17776847801574' => { any: 'json_str' },
+        'ID17776847801577' => { any: 'json_str' }
+      }
+    },
+    1 => {
+      updatedAt: 1777733136385,
+      events: Map(2) {
+        'ID17776847801577' => { any: 'json_str' },
+        'ID17776847801578' => { any: 'json_str' }
+      }
+    },
+    2 => {
+      updatedAt: 1777733136385,
+      events: Map(1) { 'ID177768478015812' => { any: 'json_str' } }
+    }
+  },
+  'efinanceira#12345678000199#003#2026#10' => Map(2) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(2) {
+        'ID17776847801573' => { any: 'json_str' },
+        'ID17776847801589' => { any: 'json_str' }
+      }
+    },
+    1 => {
+      updatedAt: 1777733136385,
+      events: Map(1) { 'ID177768478015815' => { any: 'json_str' } }
+    }
+  },
+  'efinanceira#12345678000199#003#2026#5' => Map(1) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(2) {
+        'ID17776847801572' => { any: 'json_str' },
+        'ID17776847801576' => { any: 'json_str' }
+      }
+    }
+  },
+  'efinanceira#12345678000199#003#2026#12' => Map(1) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(1) { 'ID17776847801575' => { any: 'json_str' } }
+    }
+  },
+  'efinanceira#12345678000199#003#2026#6' => Map(1) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(1) { 'ID177768478015816' => { any: 'json_str' } }
+    }
+  },
+  'efinanceira#12345678000199#003#2026#1' => Map(1) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(1) { 'ID177768478015817' => { any: 'json_str' } }
+    }
+  },
+  'efinanceira#12345678000199#003#2026#9' => Map(1) {
+    0 => {
+      updatedAt: 1777733136385,
+      events: Map(1) { 'ID177768478015818' => { any: 'json_str' } }
+    }
+  }
+}
