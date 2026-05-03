@@ -95,17 +95,33 @@ const lista = [
 
 
 
+function getPackagerWithTimeLimitExpired() {
+  const timeLimitToHoldingPackageInSecods = 10
+  const timeLimitToHoldingPackageInMilliseconds = 10 * 1000
+  const packagesToProcess = []
+  for (const [keyGroup, valueGroup] of queue){
+    for (const [packageIndex, packageItem] of valueGroup.package) {
+      const millisecondsDiff = Date.now() - packageItem.lastEventCreatedAt
 
+      console.log("TODO - ARRUMAR: millisecondsDiff", millisecondsDiff)
+      if (millisecondsDiff < timeLimitToHoldingPackageInMilliseconds) {
+        packagesToProcess.push({keyGroup, packageIndex})
+      }
+    }
+  }
+  return packagesToProcess
+}
 
 const queue = new Map();
 const LIMIT_PER_PACKAGE = 3;
 
 function addItemQueue(keyGroup, eventId, data) {
   const currentTs = Date.now()
+  const status = "Stacking"
 
   if (!queue.has(keyGroup)) {
     const lastPackageId = 1
-    const firstPackage = { lastEventCreatedAt: currentTs, events: new Map().set(eventId, data) }
+    const firstPackage = { lastEventCreatedAt: currentTs, status, events: new Map().set(eventId, data) }
     queue.set(keyGroup, { lastPackageId,  package: new Map().set(lastPackageId, firstPackage) });
     return { keyGroup, package: { lastPackageId, eventId, lastEventCreatedAt: currentTs, data } }
   }
@@ -121,7 +137,7 @@ function addItemQueue(keyGroup, eventId, data) {
 
   const newLastPackageId = group.lastPackageId + 1
   group.lastPackageId = newLastPackageId
-  group.package.set(newLastPackageId, { lastEventCreatedAt: currentTs, events: new Map().set(eventId, data) })
+  group.package.set(newLastPackageId, { lastEventCreatedAt: currentTs, status, events: new Map().set(eventId, data) })
   return { keyGroup, package: { lastPackageId: newLastPackageId, eventId, lastEventCreatedAt: currentTs, data } }
 }
 
@@ -152,13 +168,17 @@ function deletePackageQueue(keyGroup, packageIndex) {
   }
 }
 
+const listaControle = new Map()
 
+function addElementControle(response) {
+  listaControle.set([response.keyGroup, response.package.lastPackageId, response.package.eventId], { lastEventCreatedAt: response.package.lastEventCreatedAt })
+}
 
 for (const el of lista) {
   const eventId = el.eventId
   const keyGroup = el.keyGroup
 
-  const r = addItemQueue(keyGroup, eventId, {"any": "json_str"})
+  addElementControle(addItemQueue(keyGroup, eventId, {"any": "json_str"}))
 }
 
 deleteItemQueue("efinanceira#12345678000199#003#2026#3", 1, "ID177768478015742122")
@@ -167,20 +187,52 @@ deleteItemQueue("efinanceira#12345678000199#003#2026#3", 1, "ID17776847321318015
 deleteItemQueue("efinanceira#12345678000199#003#2026#3", 2, "ID17776843213127801577")
 deleteItemQueue("efinanceira#12345678000199#003#2026#3", 2, "ID17776832132131247801577")
 
-addItemQueue("efinanceira#12345678000199#003#2026#3", "ID-NOVO-17776847801577", {"msg": "novo conteudo"})
-addItemQueue("efinanceira#12345678000199#003#2026#3", "ID-NOVO-2-17776847801577", {"msg": "novo conteudo"})
-addItemQueue("efinanceira#12345678000199#003#2026#3", "ID-NOVO-3-17776847801577", {"msg": "novo conteudo"})
+addElementControle(addItemQueue("efinanceira#12345678000199#003#2026#3", "ID-NOVO-17776847801577", {"msg": "novo conteudo"}))
+addElementControle(addItemQueue("efinanceira#12345678000199#003#2026#3", "ID-NOVO-2-17776847801577", {"msg": "novo conteudo"}))
+addElementControle(addItemQueue("efinanceira#12345678000199#003#2026#3", "ID-NOVO-3-17776847801577", {"msg": "novo conteudo"}))
 
 
 deletePackageQueue("efinanceira#12345678000199#003#2026#1", 1)
 deletePackageQueue("efinanceira#12345678000199#003#2026#10", 1)
 
+function collectPackagesAlredyForProcess() {
+  const packagesToProcess = []
+  for (const [keyGroup, valueGroup] of queue){
+    for (const [packageIndex, packageItem] of valueGroup.package) {
+      if (packageItem.events.size == 3) {
+        packagesToProcess.push({keyGroup, packageIndex})
+      }
+    }
+  }
+  return packagesToProcess
+}
 
-console.log("=============================================================")
-console.log("=============================================================")
-console.log("=============================================================")
-console.log(util.inspect(queue, {
-    showHidden: false,
-    depth: null,
-    colors: true
-}));
+
+// console.log(collectPackagesAlredyForProcess())
+
+// console.log("=============================================================")
+// console.log("=============================================================")
+// console.log("=============================================================")
+// console.log(util.inspect(queue, {
+//     showHidden: false,
+//     depth: null,
+//     colors: true
+// }));
+// console.log("=============================================================")
+// console.log("=============================================================")
+// console.log("=============================================================")
+
+
+function getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex) {
+  if (!queue.has(keyGroup)) return
+  const group = queue.get(keyGroup)
+  if (!group.package.has(packageIndex)) return
+  const packageGroup = group.package.get(packageIndex)
+  if(packageGroup.status != 'Stacking') return []
+  return packageGroup.events
+}
+
+
+for (const {keyGroup, packageIndex} of collectPackagesAlredyForProcess()) {
+  console.log(getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex))
+}

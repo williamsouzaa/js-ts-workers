@@ -2,7 +2,7 @@ import { IDeleteBatchMessagesInQueue } from "../../../../../data/interfaces/appl
 import { IGetBatchMessagesInQueue } from "../../../../../data/interfaces/application/aws/sqs/IGetBatchMessagesInQueue.js";
 import { TQueueMessage } from "../../../../../data/interfaces/application/aws/sqs/TQueueMessage.js";
 import { ProcessManager } from "../../../../../data/useCases/ProcessManager.js";
-import { EBusinessRuleIdentifier, TBusinessRule, TBusinessRuleEvent } from "../../../../../domain/useCases/names/dataInput/TBusinessRule.js";
+import { EReceivedFrom, TEntryData, TTEntryDataEvent } from "../../../../../domain/useCases/data/TEntryData.js";
 import { EObrigacaoCodigoLayout } from "../../../../../domain/useCases/names/EObrigacaoCodigoLayout.js";
 import { EObrigacaoLayout } from "../../../../../domain/useCases/names/EObrigacaoLayout.js";
 import { sleep } from "../../../../../utils/sleep.js";
@@ -12,53 +12,64 @@ import { EQueueController, IQueueController } from "../../../../interfaces/IQueu
 
 export class SQSController implements IQueueController {
   public indentifier: EQueueController = EQueueController.AWS_SQS;
-  manager: ProcessManager
 
   constructor(
     private getBatchMessagesInQueue: IGetBatchMessagesInQueue,
-    private deleteBatchMessagesInQueue: IDeleteBatchMessagesInQueue
-  ){
-    this.manager = new ProcessManager()
-  }
+    private processManager: ProcessManager
+  ) {}
 
   public async handle(): Promise<void> {
     try {
       const messages = await this.getBatchMessagesInQueue.getBatchMessages(5)
       if(!messages) return
 
+      const dataEntryList = new Array()
       for (const message of messages) {
-        const businessRule = this.buildBusinessRule(message)
-        if (!businessRule) continue
+        if (!message.body) continue
+        const entryData = this.buildEntryData(JSON.parse(message.body))
 
-        await this.manager.handle(businessRule)
+        if (entryData instanceof Error) {
+          console.log('[LOG][ERROR] - SQSController - handle - message: ', message)
+          continue
+        }
 
+        dataEntryList.push({
+          entryData,
+          rawEntryData: message.body,
+          received: {
+            identifier: EReceivedFrom.AWS_SQS,
+            sqs: {
+              messageId: message.messageId,
+              receiptId: message.receiptId
+            }
+          }
+        })
       }
-      sleep(10000)
+
+      await this.processManager.handle(dataEntryList)
     } catch (error) {
       console.log('[LOG][ERROR] - SQSController - handle - erro: ', error)
     }
   }
 
-  private buildBusinessRule(message: TQueueMessage): TBusinessRule | undefined {
-    if (!message.body) return
-    const body = JSON.parse(message.body)
-    return {
-      identifier: EBusinessRuleIdentifier.AWS_SQS,
-      event: {
-        id: body.id,
-        obrigacao: body.obrigacao,
-        layout: body.layout as EObrigacaoLayout,
-        codigoLayout: body.codLayout as EObrigacaoCodigoLayout,
-        anoObrigacao: parseInt(body.anoObrigacao, 10),
-        mesObrigacao: !!body.mesObrigacao ? parseInt(body.mesObrigacao, 10) : undefined,
-        diaObrigacao: !!body.diaObrigacao ? parseInt(body.diaObrigacao, 10) : undefined,
-        cnpjEmpresa: body.cnpjEmpresa,
-        jsonStr: body.evento,
-      },
-      sqs: {
-        messageId: message.messageId,
-        receiptId: message.receiptId
+  private buildEntryData(data: any): TEntryData | Error {
+    try {
+      return {
+        event: {
+          id: data.id,
+          obrigacao: data.obrigacao,
+          layout: data.layout as EObrigacaoLayout,
+          codigoLayout: data.codLayout as EObrigacaoCodigoLayout,
+          anoObrigacao: parseInt(data.anoObrigacao, 10),
+          mesObrigacao: !!data.mesObrigacao ? parseInt(data.mesObrigacao, 10) : undefined,
+          diaObrigacao: !!data.diaObrigacao ? parseInt(data.diaObrigacao, 10) : undefined,
+          cnpjEmpresa: data.cnpjEmpresa,
+          jsonStr: data.evento
+        }
       }
+    } catch(error) {
+      console.log(error)
+      return new Error('Erro no metodo o buildEntryData')
     }
   }
 }
