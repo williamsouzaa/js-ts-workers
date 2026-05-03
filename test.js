@@ -1,8 +1,11 @@
-const x = new Set()
+const evento = {
+  id: "EVT-123",
+  layout: "003",
+  // ... outras 8 chaves pequenas
+  payloadGigante: '{"transacoes": [...]}' // Já é uma string!
+};
 
+// 1. Separamos o gigante dos pequenos
+const { payloadGigante, ...camposPequenos } = evento;
 
-x.add([1, 'a'])
-x.add([3, 'b'])
-x.add([2, 'c'])
-
-console.log(x)
+console.log("Campos pequenos:", camposPequenos);

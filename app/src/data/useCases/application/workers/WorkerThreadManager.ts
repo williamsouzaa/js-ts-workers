@@ -5,10 +5,9 @@ import { IWorkerThreadManager } from '../../../interfaces/application/workers/IW
 import { IWorkerThread } from '../../../interfaces/application/workers/IWorkerThread.js'
 
 export class WorkerThreadManager implements IWorkerThreadManager {
-  public queue: Array<any> = []
   public workerThreadsPool: Map<number, IWorkerThread> = new Map()
 
-  public async init(pathFileWorker: string, turnOnQuantity: number | null = null): Promise<Map<number, IWorkerThread>> {
+  public async init(pathFileWorker: string, turnOnQuantity: number | null = null): Promise<void> {
     if (!turnOnQuantity) {
         const totalCores = os.cpus().length
         turnOnQuantity = totalCores - 1
@@ -19,7 +18,6 @@ export class WorkerThreadManager implements IWorkerThreadManager {
         await worker.handle(i, `workerThread${i}`, pathFileWorker)
         this.workerThreadsPool.set(i, worker)
       }
-      return this.workerThreadsPool
   }
 
   public async stopAll(): Promise<void> {

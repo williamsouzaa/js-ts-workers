@@ -1,4 +1,4 @@
-import { IQueue, TQueueAddItemResponse, TQueueItem, EQueuePackageStatus, TQueueEventData } from "../../../interfaces/application/queue/IQueue.js"
+import { IQueue, TQueueAddItemResponse, TQueueItem, EQueuePackageStatus, TQueueEventData, TQueueMapKeysAndEvents } from "../../../interfaces/application/queue/IQueue.js"
 
 
 export class Queue implements IQueue {
@@ -94,7 +94,7 @@ export class Queue implements IQueue {
     return packagesToProcess
   }
 
-  public getAndUpdateStatusPackagesToProcessing(keyGroup: string, packageIndex: number): Map<string, TQueueEventData> | void {
+  public getAndUpdateStatusPackagesToProcessing(keyGroup: string, packageIndex: number): TQueueMapKeysAndEvents | void{
     if (!this.queue.has(keyGroup)) return
     const group = this.queue.get(keyGroup)
 
@@ -104,6 +104,6 @@ export class Queue implements IQueue {
     if(packageGroup!.status === EQueuePackageStatus.PROCESSING) return
     packageGroup!.status = EQueuePackageStatus.PROCESSING
 
-    return packageGroup!.events
+    return { keyGroup, packageIndex, events: packageGroup!.events}
   }
 }

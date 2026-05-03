@@ -21,17 +21,15 @@ export type TTEntryDataEvent = {
   mesObrigacao?: number | undefined,
   diaObrigacao?: number | undefined,
   cnpjEmpresa: string,
-  jsonStr: string,
 }
 
-export type TEntryData = {
-  event: TTEntryDataEvent
-}
 
 export type TRawEntryData = string
 
-
-
+export type TEntryData = {
+  event: TTEntryDataEvent
+  rawData: TRawEntryData
+}
 
 export type TReceived = {
   from: EReceivedFrom,

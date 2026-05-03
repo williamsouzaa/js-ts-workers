@@ -23,6 +23,8 @@ export class SQSController implements IQueueController {
       const messages = await this.getBatchMessagesInQueue.getBatchMessages(5)
       if(!messages) return
 
+      console.log(`[LOG] - SQSController - handle - messages recebidas: ${messages.length}`)
+
       const dataEntryList = new Array()
       for (const message of messages) {
         if (!message.body) continue
@@ -64,8 +66,8 @@ export class SQSController implements IQueueController {
           mesObrigacao: !!data.mesObrigacao ? parseInt(data.mesObrigacao, 10) : undefined,
           diaObrigacao: !!data.diaObrigacao ? parseInt(data.diaObrigacao, 10) : undefined,
           cnpjEmpresa: data.cnpjEmpresa,
-          jsonStr: data.evento
-        }
+        },
+        rawData: data.evento
       }
     } catch(error) {
       console.log(error)

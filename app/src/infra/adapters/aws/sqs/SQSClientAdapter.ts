@@ -21,7 +21,8 @@ export class SQSClientAdapter implements IGetBatchMessagesInQueue, IDeleteBatchM
           new ReceiveMessageCommand({
             QueueUrl: this.awsSQSQueueUrl,
             MaxNumberOfMessages: 10,
-            VisibilityTimeout: 45
+            VisibilityTimeout: 45,
+            WaitTimeSeconds: 10
           })
         );
       }

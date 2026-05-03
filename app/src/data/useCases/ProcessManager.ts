@@ -1,15 +1,17 @@
 import { pipeline } from "node:stream";
 import { TEntryData, TEntryDataReceived, TRawEntryData, TReceived, TTEntryDataEvent } from "../../domain/useCases/data/TEntryData.js";
-import { IQueue, TQueueAddItemResponse } from "../interfaces/application/queue/IQueue.js";
+import { IQueue, TQueueAddItemResponse, TQueueMapKeysAndEvents } from "../interfaces/application/queue/IQueue.js";
 import { IWorkerThreadManager } from "../interfaces/application/workers/IWorkerThreadManager.js";
 import { RedisClient } from "../../infra/databases/connections/redis/RedisConnect.js";
 import { TQueueMessage } from "../interfaces/application/aws/sqs/TQueueMessage.js";
 import util from 'util'
+import { sleep } from "../../utils/sleep.js";
 
 export class ProcessManager {
   // private workerThreadManager: IWorkerThreadManager,
   constructor(
-    private queue: IQueue
+    private queue: IQueue,
+    private workerThreadManager: IWorkerThreadManager
   ) {}
 
   public async handle(entryDataList: Array<TEntryDataReceived>): Promise<void> {
@@ -19,7 +21,6 @@ export class ProcessManager {
       const eventId = entryData.event.id
       const keyGroup = this.buildKeyGroup(entryData.event)
       const queueResponse = this.queue.addItem(keyGroup, eventId, entryData)
-
       redisPackage.push({rawEntryData, received, queueResponse})
     }
 
@@ -28,14 +29,41 @@ export class ProcessManager {
     const packagesExpired = this.queue.getPackagesWithTimeLimitExpired()
     const packageAlredyFoProcess = this.queue.collectPackagesAlredyForProcess()
 
-    const packagesToProcess = new Array()
+    const packagesToProcess: Array<TQueueMapKeysAndEvents> = new Array()
+
     for (const { keyGroup, packageIndex}  of [...packagesExpired, ...packageAlredyFoProcess]) {
-      packagesToProcess.push(this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex))
+      packagesToProcess.push(this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex) as TQueueMapKeysAndEvents)
     }
 
     if (packagesToProcess.length === 0) return
 
-    console.log("AQUI - WORKER", packagesToProcess)
+    for (const packageToProcess of packagesToProcess) {
+      let posted = false
+
+      while(!posted) {
+        if (this.workerThreadManager.allWorkersIsBusy()) {
+          await sleep(20)
+          continue
+        }
+        for (const [workerId, workerThread] of this.workerThreadManager.workerThreadsPool) {
+          // if (workerThread.workerIsBusy()) continue
+          const { keyGroup, packageIndex , events }  = packageToProcess
+          workerThread.postMessage({ workerId, keyGroup, packageIndex }, this.convertPackageToStringJson(events))
+          posted = true
+          break
+        }
+      }
+    }
+  }
+
+  private convertPackageToStringJson(eventData: any): string {
+    const eventsArrayStrings: string[] = [];
+    for (const [eventId, data] of eventData) {
+      const eventJson = JSON.stringify(data.event);
+      const eventoCompletoStr = `{"eventId":"${eventId}", "event":${eventJson}, "rawData":${data.rawData}}`;
+      eventsArrayStrings.push(eventoCompletoStr);
+    }
+    return `[${eventsArrayStrings.join(',')}]`
   }
 
   private async writeRedisPackage(redisPackage: Array<{rawEntryData: TRawEntryData, received: TReceived, queueResponse: TQueueAddItemResponse}>): Promise<void> {

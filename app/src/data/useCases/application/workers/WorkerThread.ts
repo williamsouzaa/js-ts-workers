@@ -8,11 +8,13 @@ export class WorkerThread implements IWorkerThread {
   private _name!: string
   private _state!: EWorkerState
   private _worker!: Worker
+  private _packateLimit: number = 50
 
   public get name(): string { return this._name }
   public get id(): number { return this._id }
   public get state(): EWorkerState { return this._state }
   public get worker(): Worker { return this._worker }
+
 
   public async handle(id: number, name: string, pathFileWorker: string): Promise<void> {
     this._id = id
@@ -20,24 +22,19 @@ export class WorkerThread implements IWorkerThread {
     this._state = EWorkerState.IDLE
     this._worker = new Worker(pathFileWorker, {name, workerData: {workerId: id}})
 
-    this._worker.on('message', async (message) => await this.handleSuccessEvent(message));
-    this._worker.on('error', async (erro) => await this.handleErrorEvent(erro));
-    this._worker.on('exit', async (code) => await this.handleExitEvent(code));
+    this._worker.on('message', async (message: any) => await this.handleSuccessEvent(message));
+    this._worker.on('error', async (erro: any) => await this.handleErrorEvent(erro));
+    this._worker.on('exit', async (code: any) => await this.handleExitEvent(code));
   }
 
-  public postMessage(structData: object, bufferData: any): void {
-    console.log('postMessage', 1 )
+  public postMessage(structData: object, bufferData: any, ignoreState: boolean = false): void {
     if (this._state !== EWorkerState.IDLE) return
-    console.log('postMessage', 2 )
+
     const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof bufferData === 'string'
     ? new TextEncoder().encode(bufferData)
     : new TextEncoder().encode(JSON.stringify(bufferData))
 
-    console.log('postMessage', 3 )
-    console.log('uint8ArrayData 1', uint8ArrayData )
-
     this._worker.postMessage({...structData, binaryData: uint8ArrayData }, [uint8ArrayData.buffer])
-    console.log('uint8ArrayData 2', uint8ArrayData )
 
     this._state = EWorkerState.BUSY
   }
@@ -45,19 +42,19 @@ export class WorkerThread implements IWorkerThread {
   private async handleSuccessEvent(message: any): Promise<void> {
     this._state = EWorkerState.IDLE
     // dependencia
-    console.log(message)
+    console.log("handleSuccessEvent: ", message)
   }
 
   private async handleErrorEvent(erro: any): Promise<void> {
     this._state = EWorkerState.IDLE
     // dependencia
-    console.log(erro)
+    console.log("handleErrorEvent: ", erro)
   }
 
   private async handleExitEvent(code: any): Promise<void> {
     this._state = EWorkerState.OFFLINE
     // dependencia
-    console.log(code)
+    console.log("handleExitEvent: ", code)
   }
 
   public changeStateTo(state: EWorkerState): void { this._state = state }

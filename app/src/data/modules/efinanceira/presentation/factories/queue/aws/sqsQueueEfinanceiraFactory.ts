@@ -4,10 +4,16 @@ import { SQSClientAdapter } from "../../../../../../../infra/adapters/aws/sqs/SQ
 import { SQSController } from "../../../../../../../presentation/controllers/queue/aws/sqs/SQSController.js";
 import { ProcessManager } from "../../../../../../useCases/ProcessManager.js";
 import { Queue } from "../../../../../../useCases/application/queue/Queue.js";
+import { WorkerThreadManager } from "../../../../../../useCases/application/workers/WorkerThreadManager.js";
+import { sleep } from "../../../../../../../utils/sleep.js";
 
 
-export function sqsQueueEfinanceiraFactory() {
+export async function sqsQueueEfinanceiraFactory() {
   const sqsObrigacaoTeste = new SQSClientAdapter()
+
+  const workerThreadManager = new WorkerThreadManager()
+  await workerThreadManager.init('./app/src/data/useCases/application/workers/testWorker.ts', 4)
+  sleep(5000)
 
   sqsObrigacaoTeste.setAWSSQSQueueUrl(process.env.AWS_SQS_QUEUE_URL_EFINANCEIRA as string)
 
@@ -24,5 +30,5 @@ export function sqsQueueEfinanceiraFactory() {
   queue.setLimitPerPackage(2)
   queue.setTimeLimitToHoldingPackageInSecods(10)
 
-  return new SQSController(sqsObrigacaoTeste, new ProcessManager(queue))
+  return new SQSController(sqsObrigacaoTeste, new ProcessManager(queue, workerThreadManager))
 }
