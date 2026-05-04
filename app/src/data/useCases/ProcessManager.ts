@@ -1,6 +1,6 @@
 import { pipeline } from "node:stream";
 import { TEntryData, TEntryDataReceived, TRawEntryData, TReceived, TTEntryDataEvent } from "../../domain/useCases/data/TEntryData.js";
-import { IQueue, TQueueAddItemResponse, TQueueMapKeysAndEvents } from "../interfaces/application/queue/IQueue.js";
+import { IQueue, TQueueAddItemResponse, TQueueGroupPackageIndex, TQueueMapKeysAndEvents } from "../interfaces/application/queue/IQueue.js";
 import { IWorkerThreadManager } from "../interfaces/application/workers/IWorkerThreadManager.js";
 import { RedisClient } from "../../infra/databases/connections/redis/RedisConnect.js";
 import { TQueueMessage } from "../interfaces/application/aws/sqs/TQueueMessage.js";
@@ -28,32 +28,36 @@ export class ProcessManager {
 
     const packagesExpired = this.queue.getPackagesWithTimeLimitExpired()
     const packageAlredyFoProcess = this.queue.collectPackagesAlredyForProcess()
+    const packagerToProcess = [...packagesExpired, ...packageAlredyFoProcess]
 
-    const packagesToProcess: Array<TQueueMapKeysAndEvents> = new Array()
+    if (packagerToProcess.length === 0) return
 
-    for (const { keyGroup, packageIndex}  of [...packagesExpired, ...packageAlredyFoProcess]) {
-      packagesToProcess.push(this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex) as TQueueMapKeysAndEvents)
-    }
+    const totalWorkers = this.workerThreadManager.workerThreadsPool.size
+    const packagePartsToProcess = this.brokePackagesToParts(packagerToProcess, totalWorkers)
 
-    if (packagesToProcess.length === 0) return
+    for (let i = 0; i < totalWorkers; i++) {
+      const packagePart = packagePartsToProcess[i]
+      const workerThread = this.workerThreadManager.workerThreadsPool.get(i)
+      if (!packagePart || !workerThread) throw new Error("Erro ao distribuir os pacotes para os workers.")
 
-    for (const packageToProcess of packagesToProcess) {
-      let posted = false
+      for (const { keyGroup, packageIndex } of packagePart) {
+        const packageToProcess = this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
+        if (!packageToProcess) continue
 
-      while(!posted) {
-        if (this.workerThreadManager.allWorkersIsBusy()) {
-          await sleep(20)
-          continue
-        }
-        for (const [workerId, workerThread] of this.workerThreadManager.workerThreadsPool) {
-          // if (workerThread.workerIsBusy()) continue
-          const { keyGroup, packageIndex , events }  = packageToProcess
-          workerThread.postMessage({ workerId, keyGroup, packageIndex }, this.convertPackageToStringJson(events))
-          posted = true
-          break
-        }
+        const { events } = packageToProcess
+        workerThread.postMessage({ workerId: i, keyGroup, packageIndex }, this.convertPackageToStringJson(events))
       }
     }
+  }
+
+ brokePackagesToParts(packagesToProcess: Array<TQueueGroupPackageIndex>, totalWorkers: number): Array<Array<TQueueGroupPackageIndex>>  {
+    const packagesPartsToEachaWorker = new Array()
+    for (let i = 0; i < totalWorkers; i++) {
+      const sizeOfSlice = Math.ceil(packagesToProcess.length / totalWorkers)
+      const part = packagesToProcess.slice(i * sizeOfSlice, (i + 1) * sizeOfSlice)
+      packagesPartsToEachaWorker.push(part)
+    }
+    return packagesPartsToEachaWorker
   }
 
   private convertPackageToStringJson(eventData: any): string {

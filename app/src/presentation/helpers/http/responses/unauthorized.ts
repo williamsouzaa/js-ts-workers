@@ -1,4 +1,4 @@
-import { THttpResponse } from '../../../interfaces/http/THttpResponse'
+import { THttpResponse } from "#src/presentation/interfaces/http/THttpResponse.js";
 
 export function unauthorized (error : any | Error = null): THttpResponse {
   return {

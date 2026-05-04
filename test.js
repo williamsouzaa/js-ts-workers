@@ -1,11 +1,22 @@
-const evento = {
-  id: "EVT-123",
-  layout: "003",
-  // ... outras 8 chaves pequenas
-  payloadGigante: '{"transacoes": [...]}' // Já é uma string!
-};
 
-// 1. Separamos o gigante dos pequenos
-const { payloadGigante, ...camposPequenos } = evento;
 
-console.log("Campos pequenos:", camposPequenos);
+const packagesToProcess = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
+
+console.log(packagesToProcess[56])
+
+const totalWorkers = 4
+
+
+
+// function brokePackagesToParts(packagesToProcess, totalWorkers) {
+//   const packagesPartsToEachaWorker = new Array()
+//   for (let i = 0; i < totalWorkers; i++) {
+//     const sizeOfSlice = Math.ceil(packagesToProcess.length / totalWorkers)
+//     const part = packagesToProcess.slice(i * sizeOfSlice, (i + 1) * sizeOfSlice)
+//     packagesPartsToEachaWorker.push(part)
+//   }
+//   return packagesPartsToEachaWorker
+// }
+
+
+// console.log(packagesPartsToEachaWorker)

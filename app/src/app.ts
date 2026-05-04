@@ -3,8 +3,12 @@ import { queueControllerFactory } from "./main/factories/controllers/queue/queue
 
 class App {
   public async handle(): Promise<void> {
+    console.log('[LOG][INFO] - App - handle - start!!!!!!!')
+
+
     this.databases()
     const sqsQueueControllerList = await queueControllerFactory()
+
 
     while(true) {
       for (const sqsQueueController of sqsQueueControllerList) {

@@ -12,8 +12,10 @@ export async function sqsQueueEfinanceiraFactory() {
   const sqsObrigacaoTeste = new SQSClientAdapter()
 
   const workerThreadManager = new WorkerThreadManager()
-  await workerThreadManager.init('./app/src/data/useCases/application/workers/testWorker.ts', 4)
-  sleep(5000)
+  await workerThreadManager.init(4)
+
+  await sleep(5000)
+  console.log(`[LOG][INFO] - sqsQueueEfinanceiraFactory - workerThreadManager iniciado: `, workerThreadManager)
 
   sqsObrigacaoTeste.setAWSSQSQueueUrl(process.env.AWS_SQS_QUEUE_URL_EFINANCEIRA as string)
 

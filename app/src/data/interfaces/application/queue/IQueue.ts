@@ -28,7 +28,7 @@ export enum EQueuePackageStatus {
 }
 
 export type TQueueMapKeysAndEvents = { keyGroup: string; packageIndex: number; events: Map<string, TQueueEventData> }
-
+export type TQueueGroupPackageIndex = { keyGroup: string, packageIndex: number }
 
 export interface IQueue {
   limitPerPackage: number
@@ -38,7 +38,7 @@ export interface IQueue {
   addItem(keyGroup: string, eventId: string, data: any): TQueueAddItemResponse
   deletePackageItem(keyGroup: string, packageIndex: number, eventId: string): void
   deletePackage(keyGroup: string, packageIndex: number): void
-  getPackagesWithTimeLimitExpired(): Array<{keyGroup: string, packageIndex: number}>
-  collectPackagesAlredyForProcess(): Array<{keyGroup: string, packageIndex: number}>
+  getPackagesWithTimeLimitExpired(): Array<TQueueGroupPackageIndex>
+  collectPackagesAlredyForProcess(): Array<TQueueGroupPackageIndex>
   getAndUpdateStatusPackagesToProcessing(keyGroup: string, packageIndex: number): TQueueMapKeysAndEvents | void
 }

@@ -16,11 +16,11 @@ export class WorkerThread implements IWorkerThread {
   public get worker(): Worker { return this._worker }
 
 
-  public async handle(id: number, name: string, pathFileWorker: string): Promise<void> {
+  public async handle(id: number, name: string, worker: Worker): Promise<void> {
     this._id = id
     this._name = name
     this._state = EWorkerState.IDLE
-    this._worker = new Worker(pathFileWorker, {name, workerData: {workerId: id}})
+    this._worker = worker
 
     this._worker.on('message', async (message: any) => await this.handleSuccessEvent(message));
     this._worker.on('error', async (erro: any) => await this.handleErrorEvent(erro));

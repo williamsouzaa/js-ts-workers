@@ -233,6 +233,24 @@ function getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex) {
 }
 
 
-for (const {keyGroup, packageIndex} of collectPackagesAlredyForProcess()) {
-  console.log(getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex))
+function clearEventsInPackage(keyGroup, packageIndex) {
+  if (!queue.has(keyGroup)) return
+  const group = queue.get(keyGroup)
+  if (!group.package.has(packageIndex)) return
+  const packageGroup = group.package.get(packageIndex)
+  delete packageGroup.events
 }
+
+clearEventsInPackage("efinanceira#12345678000199#003#2026#3", 3)
+
+
+console.log(util.inspect(queue, {
+    showHidden: false,
+    depth: null,
+    colors: true
+}));
+
+// for (const {keyGroup, packageIndex} of collectPackagesAlredyForProcess()) {
+//   console.log(getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex))
+// }
+

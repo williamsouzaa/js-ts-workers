@@ -7,7 +7,7 @@ export interface IWorkerThread {
   readonly state: EWorkerState
   readonly worker: Worker
 
-  handle(id: number, name: string, pathFileWorker: string): Promise<void>
+  handle(id: number, name: string, worker: Worker): Promise<void>
   postMessage(structData: object, bufferData: any): void
   changeStateTo(state: EWorkerState): void
   workerIsBusy(): boolean

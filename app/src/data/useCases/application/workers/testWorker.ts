@@ -1,63 +1,30 @@
 import { parentPort, workerData, getEnvironmentData } from 'worker_threads';
-
+import { sleep } from '../../../../utils/sleep.js';
 
 console.log(`[LOG][INFO] - worker.js - start: `, workerData.workerId);
 
-function sucessResponse(data: any) {
+function receivedMessage(message:any) {
   return {
-      worker: {
-        id: workerData.workerId,
-        status: "sucess",
-      },
-      data: data
+    message: {
+      identifier: "received",
+      keyGroup: message.keyGroup,
+      packageIndex: message.packageIndex
+    },
+    worker: {
+      id: workerData.workerId,
     }
-}
-
-function errorResponse() {
-  return {
-      worker: {
-        id: workerData.workerId,
-        status: "error"
-      }
-    }
-}
-
-class WorkerThreadManager {
-  async handle(message: any, messageEncoded: any) {
-    const decoder = new TextDecoder('utf-8');
-    const data = decoder.decode(messageEncoded);
-    console.log(`[LOG][INFO] - WorkerThreadManager - handle - data:`, data);
-    // ADICIONAR TODOS OS PASSOS DO PROCESSAMENTO AQUI...
-    // logicaPesadaAqui()
-    // [...]
-    return "mensagem processada com sucesso"
   }
 }
 
+
+
+
+
 parentPort!.on('message', async (message) => {
   try {
-
-    console.log('===========================================')
-    console.log('===========================================')
-    console.log('===========================================')
-    console.log(`\n\n[LOG][INFO] - worker.js - message received: `, message);
-    console.log('===========================================')
-    console.log('===========================================')
-    console.log('===========================================')
-
-
-    const workerThreadManager = new WorkerThreadManager();
-    const result = await workerThreadManager.handle(message, message.data);
-    const encoder = new TextEncoder();
-    const uint8Array = encoder.encode(result);
-    const bigJsonHere = uint8Array.buffer;
-
-
-
-
-    parentPort!.postMessage(sucessResponse(bigJsonHere), [bigJsonHere]);
+    parentPort!.postMessage(receivedMessage(message));
+    await sleep(5000)
   } catch (error) {
-    console.log(`[LOG][ERROR] - worker.js - call failed: `, workerData.workerId);
-    parentPort!.postMessage(errorResponse());
+    console.log(`[LOG][ERROR] - worker.js - call failed: `, workerData.workerId)
   }
 });

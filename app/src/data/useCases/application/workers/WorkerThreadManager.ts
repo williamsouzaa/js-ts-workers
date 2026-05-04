@@ -3,20 +3,29 @@ import { EWorkerState } from "../../../interfaces/application/workers/EWorkerSta
 import { WorkerThread } from "./WorkerThread.js"
 import { IWorkerThreadManager } from '../../../interfaces/application/workers/IWorkerThreadManager.js'
 import { IWorkerThread } from '../../../interfaces/application/workers/IWorkerThread.js'
+import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
 
 export class WorkerThreadManager implements IWorkerThreadManager {
   public workerThreadsPool: Map<number, IWorkerThread> = new Map()
 
-  public async init(pathFileWorker: string, turnOnQuantity: number | null = null): Promise<void> {
+  public async init(turnOnQuantity: number | null = null): Promise<void> {
     if (!turnOnQuantity) {
         const totalCores = os.cpus().length
         turnOnQuantity = totalCores - 1
       }
 
-      for (let i = 1; i <= turnOnQuantity; i++) {
-        const worker = new WorkerThread()
-        await worker.handle(i, `workerThread${i}`, pathFileWorker)
-        this.workerThreadsPool.set(i, worker)
+      const fileExtension = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
+      const dirName = import.meta.url.endsWith('.ts') ? 'app' : 'dist';
+
+      for (let i = 0; i < turnOnQuantity; i++) {
+        const name = `workerThread${i}`
+        const worker = new Worker(`./${dirName}/src/data/useCases/application/workers/testWorker${fileExtension}`, {
+          workerData: { name, workerId: 1 }
+        });
+
+        const workerThread = new WorkerThread()
+        await workerThread.handle(i, name, worker)
+        this.workerThreadsPool.set(i, workerThread)
       }
   }
 
