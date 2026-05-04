@@ -4,14 +4,12 @@ import { IQueue, TQueueAddItemResponse, TQueueGroupPackageIndex, TQueueMapKeysAn
 import { IWorkerThreadManager } from "../interfaces/application/workers/IWorkerThreadManager.js";
 import { RedisClient } from "../../infra/databases/connections/redis/RedisConnect.js";
 import { TQueueMessage } from "../interfaces/application/aws/sqs/TQueueMessage.js";
-import util from 'util'
-import { sleep } from "../../utils/sleep.js";
+import { WorkerThreadManager } from "./application/workers/WorkerThreadManager.js";
 
 export class ProcessManager {
-  // private workerThreadManager: IWorkerThreadManager,
   constructor(
     private queue: IQueue,
-    private workerThreadManager: IWorkerThreadManager
+    private workerThreadManager: WorkerThreadManager
   ) {}
 
   public async handle(entryDataList: Array<TEntryDataReceived>): Promise<void> {

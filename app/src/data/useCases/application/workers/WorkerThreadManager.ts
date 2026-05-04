@@ -5,8 +5,10 @@ import { IWorkerThreadManager } from '../../../interfaces/application/workers/IW
 import { IWorkerThread } from '../../../interfaces/application/workers/IWorkerThread.js'
 import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
 
-export class WorkerThreadManager implements IWorkerThreadManager {
-  public workerThreadsPool: Map<number, IWorkerThread> = new Map()
+export class WorkerThreadManager {
+  public workerThreadsPool: Map<number, WorkerThread> = new Map()
+
+  constructor(private workerThreadFactory: () => WorkerThread) {}
 
   public async init(turnOnQuantity: number | null = null): Promise<void> {
     if (!turnOnQuantity) {
@@ -19,12 +21,8 @@ export class WorkerThreadManager implements IWorkerThreadManager {
 
       for (let i = 0; i < turnOnQuantity; i++) {
         const name = `workerThread${i}`
-        const worker = new Worker(`./${dirName}/src/data/useCases/application/workers/testWorker${fileExtension}`, {
-          workerData: { name, workerId: 1 }
-        });
-
-        const workerThread = new WorkerThread()
-        await workerThread.handle(i, name, worker)
+        const workerThread = this.workerThreadFactory()
+        await workerThread.handle(i, name, `./${dirName}/src/data/useCases/application/workers/testWorker${fileExtension}`)
         this.workerThreadsPool.set(i, workerThread)
       }
   }

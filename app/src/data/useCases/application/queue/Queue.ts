@@ -106,4 +106,12 @@ export class Queue implements IQueue {
 
     return { keyGroup, packageIndex, events: packageGroup!.events}
   }
+
+  public clearEventsInPackage(keyGroup: string, packageIndex: number): void {
+    if (!this.queue.has(keyGroup)) return
+    const group = this.queue.get(keyGroup)
+    if (!group!.package.has(packageIndex)) return
+    const packageGroup = group!.package.get(packageIndex)
+    packageGroup!.events.clear()
+  }
 }

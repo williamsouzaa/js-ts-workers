@@ -41,4 +41,5 @@ export interface IQueue {
   getPackagesWithTimeLimitExpired(): Array<TQueueGroupPackageIndex>
   collectPackagesAlredyForProcess(): Array<TQueueGroupPackageIndex>
   getAndUpdateStatusPackagesToProcessing(keyGroup: string, packageIndex: number): TQueueMapKeysAndEvents | void
+  clearEventsInPackage(keyGroup: string, packageIndex: number): void
 }

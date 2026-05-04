@@ -1,33 +1,73 @@
 import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
 import { EWorkerState } from "../../../interfaces/application/workers/EWorkerState.js"
-import { IWorkerThread } from "../../../interfaces/application/workers/IWorkerThread.js"
 
 
-export class WorkerThread implements IWorkerThread {
+
+export type TWorkerThreadSucessEventMessageReceived = {
+  identifier: "received",
+  keyGroup: string,
+  packageIndex: number
+}
+
+export type TWorkerThreadSucessEventMessage = {
+  identifier: "queue",
+  queue?: {
+    identifier: "processPakage"
+    message: TWorkerThreadSucessEventMessageReceived
+  },
+  worker: {
+    id: number
+  }
+}
+
+export interface IWorkerThreadSucessEventHandler {
+  handle(message: TWorkerThreadSucessEventMessage): Promise<void>
+}
+export interface IWorkerThreadErrorEventHandler {
+  handle(erro: Error): Promise<void>
+}
+export interface IWorkerThreadExitEventHandler {
+  handle(code: number): Promise<void>
+}
+
+
+export class WorkerThread {
   private _id!: number
   private _name!: string
   private _state!: EWorkerState
   private _worker!: Worker
-  private _packateLimit: number = 50
+  private _currentLoad: number = 0
+  private _limitHealthLoad: number = 1000 * 50
 
   public get name(): string { return this._name }
   public get id(): number { return this._id }
   public get state(): EWorkerState { return this._state }
   public get worker(): Worker { return this._worker }
+  public get currentLoad(): number { return this._currentLoad }
 
+  constructor(
+    private sucessEventHandler: IWorkerThreadSucessEventHandler,
+    private errorEventHandler: IWorkerThreadErrorEventHandler,
+    private exitEventHandler: IWorkerThreadExitEventHandler
+  ) {}
 
-  public async handle(id: number, name: string, worker: Worker): Promise<void> {
+  public async handle(id: number, name: string, pathWorkerFile: string): Promise<void> {
     this._id = id
     this._name = name
     this._state = EWorkerState.IDLE
-    this._worker = worker
+    this._worker = new Worker(pathWorkerFile, { workerData: { name, workerId: id } });
 
     this._worker.on('message', async (message: any) => await this.handleSuccessEvent(message));
     this._worker.on('error', async (erro: any) => await this.handleErrorEvent(erro));
     this._worker.on('exit', async (code: any) => await this.handleExitEvent(code));
   }
 
-  public postMessage(structData: object, bufferData: any, ignoreState: boolean = false): void {
+  public changeStateTo(state: EWorkerState): void { this._state = state }
+  public workerIsBusy(): boolean { return this._state === EWorkerState.BUSY }
+  public workerIsOffline(): boolean { return this._state === EWorkerState.OFFLINE }
+  public workerIsIdle(): boolean { return this._state === EWorkerState.IDLE }
+
+  public postMessage(structData: object, bufferData: any): void {
     if (this._state !== EWorkerState.IDLE) return
 
     const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof bufferData === 'string'
@@ -35,30 +75,39 @@ export class WorkerThread implements IWorkerThread {
     : new TextEncoder().encode(JSON.stringify(bufferData))
 
     this._worker.postMessage({...structData, binaryData: uint8ArrayData }, [uint8ArrayData.buffer])
+    this.addOneToTheCurrentLoad()
+  }
 
-    this._state = EWorkerState.BUSY
+  private handleStateWorker(): void {
+    if (this._currentLoad > this._limitHealthLoad) {
+      this._state = EWorkerState.BUSY
+    } else {
+      this._state = EWorkerState.IDLE
+    }
+  }
+
+  private addOneToTheCurrentLoad(): void {
+    this._currentLoad += 1
+    this.handleStateWorker()
+  }
+
+  private subtractOneFromTheCurrentLoad(): void {
+    this._currentLoad -= 1
+    this.handleStateWorker()
   }
 
   private async handleSuccessEvent(message: any): Promise<void> {
-    this._state = EWorkerState.IDLE
-    // dependencia
-    console.log("handleSuccessEvent: ", message)
+    this.subtractOneFromTheCurrentLoad()
+    await this.sucessEventHandler.handle(message)
   }
 
   private async handleErrorEvent(erro: any): Promise<void> {
-    this._state = EWorkerState.IDLE
-    // dependencia
-    console.log("handleErrorEvent: ", erro)
+    this.subtractOneFromTheCurrentLoad()
+    await this.errorEventHandler.handle(erro)
   }
 
   private async handleExitEvent(code: any): Promise<void> {
-    this._state = EWorkerState.OFFLINE
-    // dependencia
-    console.log("handleExitEvent: ", code)
+    this.subtractOneFromTheCurrentLoad()
+    await this.exitEventHandler.handle(code)
   }
-
-  public changeStateTo(state: EWorkerState): void { this._state = state }
-  public workerIsBusy(): boolean { return this._state === EWorkerState.BUSY }
-  public workerIsOffline(): boolean { return this._state === EWorkerState.OFFLINE }
-  public workerIsIdle(): boolean { return this._state === EWorkerState.IDLE }
 }
