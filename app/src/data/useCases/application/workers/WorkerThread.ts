@@ -1,6 +1,5 @@
 import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
 import { EWorkerState } from "../../../interfaces/application/workers/EWorkerState.js"
-import { sleep } from '../../../../utils/sleep.js';
 
 
 
@@ -63,7 +62,7 @@ export class WorkerThread {
     this._state = EWorkerState.IDLE
     this._worker = new Worker(pathWorkerFile, { workerData: { name, workerId: id } });
 
-    this._worker.on('message', async (structData: TPostMessageStrucData) => await this.handleSuccessEvent(structData, bufferData));
+    this._worker.on('message', async (structData: TPostMessageStrucData) => await this.handleSuccessEvent(structData));
     this._worker.on('error', async (erro: any) => await this.handleErrorEvent(erro));
     this._worker.on('exit', async (code: any) => await this.handleExitEvent(code));
   }
