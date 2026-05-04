@@ -1,15 +1,34 @@
 import { parentPort, workerData, getEnvironmentData } from 'worker_threads';
-import { sleep } from '../../../../utils/sleep.js';
+import { TPostMessageStrucData, TWorkerThreadSucessEventMessageReceived } from './WorkerThread.js';
 
-function receivedMessage(message:any) {
+
+
+
+
+
+interface IParentPortWorkerThread {
+  handle(structData: TPostMessageStrucData): Promise<void>
+}
+
+class ParentPortWorkerThreadQueueProcesssPackage implements IParentPortWorkerThread {
+  constructor() {}
+
+  public async handle(structData: TPostMessageStrucData): Promise<void> {
+    const decoder = new TextDecoder('utf-8');
+    const data = decoder.decode(structData.binaryData);
+  }
+}
+
+
+function receivedMessage(structData: TPostMessageStrucData) {
   return {
     identifier: "queue",
     queue: {
       identifier: "processPakage",
       message: {
         identifier: "received",
-        keyGroup: message.keyGroup,
-        packageIndex: message.packageIndex
+        keyGroup: structData.queue!.message!.keyGroup,
+        packageIndex: structData.queue!.message!.packageIndex
       },
     },
     worker: {
@@ -18,14 +37,20 @@ function receivedMessage(message:any) {
   }
 }
 
+export class InitParentPortWorker {
+  constructor(
+    private workerParentPort: IParentPortWorkerThread,
+  ) {}
 
-parentPort!.on('message', async (message) => {
-  try {
-    console.log(`START PROCESSAMENTO - WORKER`, workerData.workerId)
-    parentPort!.postMessage(receivedMessage(message));
-    await sleep(7000)
-    console.log(`START PROCESSAMENTO - WORKER`, message)
-  } catch (error) {
-    console.log(`[LOG][ERROR] - worker.js - call failed: `, workerData.workerId)
+  public init() {
+    parentPort!.on('message', async (message: TPostMessageStrucData) => {
+      parentPort!.postMessage(receivedMessage(message))
+    })
   }
-});
+}
+
+
+
+new InitParentPortWorker(
+  new ParentPortWorkerThreadQueueProcesssPackage()
+).init()

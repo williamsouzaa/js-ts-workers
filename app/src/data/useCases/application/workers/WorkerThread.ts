@@ -1,7 +1,20 @@
 import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
 import { EWorkerState } from "../../../interfaces/application/workers/EWorkerState.js"
+import { sleep } from '../../../../utils/sleep.js';
 
 
+
+export type TPostMessageStrucData = {
+  identifier: string,
+  queue?: {
+    identifier: string,
+    message: any | TWorkerThreadSucessEventMessageReceived
+  }
+  worker?: {
+    id: number
+  }
+  binaryData?: Uint8Array<ArrayBuffer>
+}
 
 export type TWorkerThreadSucessEventMessageReceived = {
   identifier: "received",
@@ -9,23 +22,16 @@ export type TWorkerThreadSucessEventMessageReceived = {
   packageIndex: number
 }
 
-export type TWorkerThreadSucessEventMessage = {
-  identifier: "queue",
-  queue?: {
-    identifier: "processPakage"
-    message: TWorkerThreadSucessEventMessageReceived
-  },
-  worker: {
-    id: number
-  }
-}
+
 
 export interface IWorkerThreadSucessEventHandler {
-  handle(message: TWorkerThreadSucessEventMessage): Promise<void>
+  handle(structData: TPostMessageStrucData): Promise<void>
 }
+
 export interface IWorkerThreadErrorEventHandler {
   handle(erro: Error): Promise<void>
 }
+
 export interface IWorkerThreadExitEventHandler {
   handle(code: number): Promise<void>
 }
@@ -57,7 +63,7 @@ export class WorkerThread {
     this._state = EWorkerState.IDLE
     this._worker = new Worker(pathWorkerFile, { workerData: { name, workerId: id } });
 
-    this._worker.on('message', async (message: any) => await this.handleSuccessEvent(message));
+    this._worker.on('message', async (structData: TPostMessageStrucData) => await this.handleSuccessEvent(structData, bufferData));
     this._worker.on('error', async (erro: any) => await this.handleErrorEvent(erro));
     this._worker.on('exit', async (code: any) => await this.handleExitEvent(code));
   }
@@ -67,7 +73,7 @@ export class WorkerThread {
   public workerIsOffline(): boolean { return this._state === EWorkerState.OFFLINE }
   public workerIsIdle(): boolean { return this._state === EWorkerState.IDLE }
 
-  public postMessage(structData: object, bufferData: any): void {
+  public async postMessage(structData: TPostMessageStrucData, bufferData: any): Promise<void> {
     if (this._state !== EWorkerState.IDLE) return
 
     const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof bufferData === 'string'
@@ -96,9 +102,9 @@ export class WorkerThread {
     this.handleStateWorker()
   }
 
-  private async handleSuccessEvent(message: any): Promise<void> {
+  private async handleSuccessEvent(structData: TPostMessageStrucData, bufferData?: Uint8Array<ArrayBuffer>): Promise<void> {
     this.subtractOneFromTheCurrentLoad()
-    await this.sucessEventHandler.handle(message)
+    await this.sucessEventHandler.handle(structData)
   }
 
   private async handleErrorEvent(erro: any): Promise<void> {

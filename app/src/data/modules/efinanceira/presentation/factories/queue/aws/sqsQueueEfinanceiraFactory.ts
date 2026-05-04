@@ -10,8 +10,9 @@ import {
   IWorkerThreadErrorEventHandler,
   IWorkerThreadExitEventHandler,
   IWorkerThreadSucessEventHandler,
+  TPostMessageStrucData,
   TWorkerThreadSucessEventMessageReceived,
-  TWorkerThreadSucessEventMessage,
+
   WorkerThread
 } from "../../../../../../useCases/application/workers/WorkerThread.js";
 import { IQueue } from "../../../../../../interfaces/application/queue/IQueue.js";
@@ -21,13 +22,13 @@ import { IQueue } from "../../../../../../interfaces/application/queue/IQueue.js
 class WorkerThreadSucessEventHandlerXPTO implements IWorkerThreadSucessEventHandler {
   constructor(private queue: IQueue) {}
 
-  public async handle(message: TWorkerThreadSucessEventMessage): Promise<void> {
+  public async handle(message: TPostMessageStrucData): Promise<void> {
     if (message.identifier === "queue") return this.handleQueueMessage(message)
 
     console.log(`caindo fora da classe aqui - Lidar com isso:`)
   }
 
-  private async handleQueueMessage(message: TWorkerThreadSucessEventMessage): Promise<void> {
+  private async handleQueueMessage(message: TPostMessageStrucData): Promise<void> {
     if (!message.queue) throw new Error("Message queue is undefined in handleQueueMessage")
     if (message.queue.identifier !== "processPakage")  throw new Error("System expected to receive a message with identifier 'processPakage'")
 

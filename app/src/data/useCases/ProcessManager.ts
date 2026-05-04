@@ -42,8 +42,14 @@ export class ProcessManager {
         const packageToProcess = this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
         if (!packageToProcess) continue
 
-        const { events } = packageToProcess
-        workerThread.postMessage({ workerId: i, keyGroup, packageIndex }, this.convertPackageToStringJson(events))
+        const structData = {
+          identifier: "queue",
+          queue: {
+            identifier: "processPakage",
+            message: { workerId: i, keyGroup, packageIndex }
+          }
+        }
+        workerThread.postMessage(structData, this.convertPackageToStringJson(packageToProcess.events))
       }
     }
   }
