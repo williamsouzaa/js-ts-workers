@@ -1,7 +1,5 @@
 import { EntryType } from "node:perf_hooks"
-import { EObrigacao } from "../names/EObrigacao.js"
-import { EObrigacaoCodigoLayout } from "../names/EObrigacaoCodigoLayout.js"
-import { EObrigacaoLayout } from "../names/EObrigacaoLayout.js"
+import { EObrigacao, EObrigacaoLayout, EObrigacaoCodigoLayout } from "../names/index.js"
 
 export type TReceivedSQS = {
   messageId: string

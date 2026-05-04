@@ -1,7 +1,6 @@
 import process  from "node:process";
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { SQSClientAdapter } from "../../../../../../../infra/adapters/aws/sqs/SQSClientAdapter.js";
-import { SQSController } from "../../../../../../../presentation/controllers/queue/aws/sqs/SQSController.js";
 import { ProcessManager } from "../../../../../../useCases/ProcessManager.js";
 import { Queue } from "../../../../../../useCases/application/queue/Queue.js";
 import { WorkerThreadManager } from "../../../../../../useCases/application/workersThreads/workers/WorkerThreadManager.js";
@@ -11,6 +10,8 @@ import { WorkerThreadSucessEventHandlerQueuePackages } from "../../../../../../.
 import { WorkerThreadErrorEventHandlerQueuePackages } from "../../../../../../../data/useCases/application/workersThreads/listeners/processQueuePackages/events/WorkerThreadErrorEventHandlerQueuePackages.js"
 import { WorkerThreadExitEventHandlerQueuePackages } from "../../../../../../../data/useCases/application/workersThreads/listeners/processQueuePackages/events/WorkerThreadExitEventHandlerQueuePackages.js"
 import { IQueue } from "../../../../../../interfaces/application/queue/IQueue.js";
+import { SQSController } from "../../../../../../../presentation/controllers/aws/sqs/SQSController.js";
+import { RedisQueuePackageRepositoryAdapter } from "../../../../../../../infra/databases/repositories/redis/RedisQueuePackageRepositoryAdapter.js";
 
 
 
@@ -48,5 +49,12 @@ export async function sqsQueueEfinanceiraFactory() {
   await workerThreadManager.init("./dist/src/data/useCases/application/workersThreads/listeners/processQueuePackages/WorkerListenerToProcessQueuePackage.js", 4)
   await sleep(5000)
 
-  return new SQSController(sqsObrigacaoEfinanceira, new ProcessManager(queue, workerThreadManager))
+  return new SQSController(
+    sqsObrigacaoEfinanceira,
+    new ProcessManager(
+      queue,
+      workerThreadManager,
+      new RedisQueuePackageRepositoryAdapter()
+    )
+  )
 }

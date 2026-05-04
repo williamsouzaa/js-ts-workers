@@ -1,12 +1,10 @@
-import { IDeleteBatchMessagesInQueue } from "../../../../../data/interfaces/application/aws/sqs/IDeleteBatchMessagesInQueue.js";
-import { IGetBatchMessagesInQueue } from "../../../../../data/interfaces/application/aws/sqs/IGetBatchMessagesInQueue.js";
-import { TQueueMessage } from "../../../../../data/interfaces/application/aws/sqs/TQueueMessage.js";
-import { ProcessManager } from "../../../../../data/useCases/ProcessManager.js";
-import { EReceivedFrom, TEntryData, TTEntryDataEvent } from "../../../../../domain/useCases/data/TEntryData.js";
-import { EObrigacaoCodigoLayout } from "../../../../../domain/useCases/names/EObrigacaoCodigoLayout.js";
-import { EObrigacaoLayout } from "../../../../../domain/useCases/names/EObrigacaoLayout.js";
-import { sleep } from "../../../../../utils/sleep.js";
-import { EQueueController, IQueueController } from "../../../../interfaces/IQueueController.js";
+import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/aws/sqs/IGetBatchMessagesInQueue.js";
+import { ProcessManager } from "../../../../data/useCases/ProcessManager.js";
+import { EReceivedFrom, TEntryData } from "../../../../domain/useCases/data/TEntryData.js";
+import { EObrigacaoLayout, EObrigacaoCodigoLayout } from "../../../../domain/useCases/names/index.js";
+
+import { IQueueController, EQueueController } from "../../../interfaces/IQueueController.js";
+
 
 
 

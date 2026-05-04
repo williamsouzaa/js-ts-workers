@@ -3,25 +3,27 @@ import { TEntryData, TEntryDataReceived, TRawEntryData, TReceived, TTEntryDataEv
 import { IQueue, TQueueAddItemResponse, TQueueGroupPackageIndex, TQueueMapKeysAndEvents } from "../interfaces/application/queue/IQueue.js";
 import { RedisClient } from "../../infra/databases/connections/redis/RedisConnect.js";
 import { WorkerThreadManager } from "./application/workersThreads/workers/WorkerThreadManager.js";
+import { IWriteQueuePackageRepository } from "../interfaces/application/repositories/queuePackages/IWriteQueuePackageRepository.js";
+import { EWorkersProcess, EWorkersProcessQueue } from "../../domain/useCases/names/index.js";
 
 
 export class ProcessManager {
   constructor(
     private queue: IQueue,
-    private workerThreadManager: WorkerThreadManager
+    private workerThreadManager: WorkerThreadManager,
+    private writeQueuePackageRepository: IWriteQueuePackageRepository
   ) {}
 
   public async handle(entryDataList: Array<TEntryDataReceived>): Promise<void> {
-    const redisPackage = new Array()
-
+    const dataPackageToPersist = new Array()
     for (const { entryData, rawEntryData, received } of entryDataList) {
       const eventId = entryData.event.id
       const keyGroup = this.buildKeyGroup(entryData.event)
       const queueResponse = this.queue.addItem(keyGroup, eventId, entryData)
-      redisPackage.push({rawEntryData, received, queueResponse})
+      dataPackageToPersist.push({rawEntryData, received, queueResponse})
     }
 
-    await this.writeRedisPackage(redisPackage)
+    await this.writeQueuePackageRepository.writePackage(dataPackageToPersist)
 
     const packagesExpired = this.queue.getPackagesWithTimeLimitExpired()
     const packageAlredyFoProcess = this.queue.collectPackagesAlredyForProcess()
@@ -42,9 +44,9 @@ export class ProcessManager {
         if (!packageToProcess) continue
 
         const structData = {
-          identifier: "queue",
+          identifier: EWorkersProcess.QUEUE,
           queue: {
-            identifier: "processPakage",
+            identifier: EWorkersProcessQueue.PROCESS_PACKAGE,
             message: { keyGroup, packageIndex }
           },
           worker: {
@@ -74,47 +76,6 @@ export class ProcessManager {
       eventsArrayStrings.push(eventoCompletoStr);
     }
     return `[${eventsArrayStrings.join(',')}]`
-  }
-
-  private async writeRedisPackage(redisPackage: Array<{rawEntryData: TRawEntryData, received: TReceived, queueResponse: TQueueAddItemResponse}>): Promise<void> {
-    const pipeline = RedisClient.client.multi()
-
-    const redisRawEntryData: Record<string, Record<string, string>> = {}
-    const redisReceivedFrom: Record<string, Record<string, string>> = {}
-    const redisIndexKeysRawEntryData: Record<string, Set<string>> = {}
-    const redisIndexReceivedFrom: Record<string, Set<string>> = {}
-
-    for (const { queueResponse, rawEntryData, received } of redisPackage) {
-      if (!Object.hasOwn(redisIndexKeysRawEntryData, `${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#INDEX`)) {
-        redisIndexKeysRawEntryData[`${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#INDEX`] = new Set<string>()
-      }
-      redisIndexKeysRawEntryData[`${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#INDEX`]!.add(queueResponse.package.lastPackageId.toString())
-
-      if (!Object.hasOwn(redisIndexReceivedFrom, `${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#INDEX`)) {
-        redisIndexReceivedFrom[`${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#INDEX`] = new Set<string>()
-      }
-      redisIndexReceivedFrom[`${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#INDEX`]!.add(queueResponse.package.lastPackageId.toString())
-
-      const redisRawEntryDataKey: string = `${queueResponse.keyGroup}#RAW_ENTRY_DATA#PACKAGE#${queueResponse.package.lastPackageId}`
-      if (!Object.hasOwn(redisRawEntryData, redisRawEntryDataKey)) {
-        redisRawEntryData[redisRawEntryDataKey] = {}
-      }
-      redisRawEntryData[redisRawEntryDataKey]![queueResponse.package.eventId] = rawEntryData
-
-      const redisReceivedFromKey = `${queueResponse.keyGroup}#RECEIVED_FROM#PACKAGE#${queueResponse.package.lastPackageId}`
-      if (!Object.hasOwn(redisReceivedFrom, redisReceivedFromKey)) {
-        redisReceivedFrom[redisReceivedFromKey] = {}
-      }
-      redisReceivedFrom[redisReceivedFromKey]![queueResponse.package.eventId] = JSON.stringify(received)
-    }
-
-    Object.entries(redisIndexKeysRawEntryData).forEach(([key, value]) => {if (value.size > 0) pipeline.sAdd(key, [...value])});
-    Object.entries(redisIndexReceivedFrom).forEach(([key, value]) => {if (value.size > 0) pipeline.sAdd(key, [...value])});
-
-    Object.entries(redisRawEntryData).forEach(([key, value]) => {if (Object.keys(value).length > 0) pipeline.hSet(key, value)} );
-    Object.entries(redisReceivedFrom).forEach(([key, value]) => {if (Object.keys(value).length > 0) pipeline.hSet(key, value)} );
-
-    await pipeline.exec();
   }
 
   private buildKeyGroup(event: TTEntryDataEvent): string {

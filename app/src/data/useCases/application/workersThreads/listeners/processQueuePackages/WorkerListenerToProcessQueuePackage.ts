@@ -4,6 +4,7 @@ import { TPostMessageStrucData } from "../../../../../interfaces/application/wor
 import { IWorkerThreadListener } from "../../../../../interfaces/application/workers/IWorkerThreadListener.js"
 import { EfinanceiraQueueProcesssPackage } from "../../../../../modules/efinanceira/data/useCases/workers/listeners/processPackage/EfinanceiraQueueProcesssPackage.js"
 import { RedisClient } from "../../../../../../infra/databases/connections/redis/RedisConnect.js"
+import { EWorkersProcess, EWorkersProcessQueue } from "../../../../../../domain/useCases/names/index.js"
 
 class WorkerListenerToProcessQueuePackage implements IWorkerThreadListener {
   public async handle() {
@@ -20,9 +21,9 @@ class WorkerListenerToProcessQueuePackage implements IWorkerThreadListener {
 
   private receivedMessage(structData: TPostMessageStrucData): TPostMessageStrucData {
     return {
-      identifier: "queue",
+      identifier: EWorkersProcess.QUEUE,
       queue: {
-        identifier: "processPakage",
+        identifier: EWorkersProcessQueue.PROCESS_PACKAGE,
         message: {
           identifier: "received",
           keyGroup: structData.queue!.message!.keyGroup,

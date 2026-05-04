@@ -1,3 +1,4 @@
+import { EWorkersProcessQueue } from "../../../../../../../../domain/useCases/names/index.js";
 import { IParentPortWorkerThread } from "../../../../../../../interfaces/application/workers/IParentPortWorkerThread.js";
 import { TPostMessageStrucData } from "../../../../../../../interfaces/application/workers/TPostMessageStrucData.js";
 
@@ -17,7 +18,7 @@ export class EfinanceiraQueueProcesssPackage implements IParentPortWorkerThread 
   }
 
   private isValidMessageToProcess(structData: TPostMessageStrucData): boolean {
-    return structData.identifier === "queue" && structData.queue?.identifier === "processPakage"
+    return structData.identifier === "queue" && structData.queue?.identifier === EWorkersProcessQueue.PROCESS_PACKAGE
   }
 
   private handleToBuildMessageToProcess(structData: TPostMessageStrucData): TPostMessageStrucData {
