@@ -1,28 +1,22 @@
 import os from 'os'
-import { EWorkerState } from "../../../interfaces/application/workers/EWorkerState.js"
 import { WorkerThread } from "./WorkerThread.js"
-import { IWorkerThreadManager } from '../../../interfaces/application/workers/IWorkerThreadManager.js'
-import { IWorkerThread } from '../../../interfaces/application/workers/IWorkerThread.js'
-import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
+import { EWorkerState } from '../../../../interfaces/application/workers/EWorkerState.js';
 
 export class WorkerThreadManager {
   public workerThreadsPool: Map<number, WorkerThread> = new Map()
 
   constructor(private workerThreadFactory: () => WorkerThread) {}
 
-  public async init(turnOnQuantity: number | null = null): Promise<void> {
+  public async init(filePath: `./dist/${string}.js`, turnOnQuantity: number | null = null): Promise<void> {
     if (!turnOnQuantity) {
         const totalCores = os.cpus().length
         turnOnQuantity = totalCores - 1
       }
 
-      const fileExtension = import.meta.url.endsWith('.ts') ? '.ts' : '.js';
-      const dirName = import.meta.url.endsWith('.ts') ? 'app' : 'dist';
-
       for (let i = 0; i < turnOnQuantity; i++) {
         const name = `workerThread${i}`
         const workerThread = this.workerThreadFactory()
-        await workerThread.handle(i, name, `./${dirName}/src/data/useCases/application/workers/testWorker${fileExtension}`)
+        await workerThread.handle(i, name, filePath)
         this.workerThreadsPool.set(i, workerThread)
       }
   }

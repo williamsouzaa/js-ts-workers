@@ -1,10 +1,9 @@
 import { pipeline } from "node:stream";
 import { TEntryData, TEntryDataReceived, TRawEntryData, TReceived, TTEntryDataEvent } from "../../domain/useCases/data/TEntryData.js";
 import { IQueue, TQueueAddItemResponse, TQueueGroupPackageIndex, TQueueMapKeysAndEvents } from "../interfaces/application/queue/IQueue.js";
-import { IWorkerThreadManager } from "../interfaces/application/workers/IWorkerThreadManager.js";
 import { RedisClient } from "../../infra/databases/connections/redis/RedisConnect.js";
-import { TQueueMessage } from "../interfaces/application/aws/sqs/TQueueMessage.js";
-import { WorkerThreadManager } from "./application/workers/WorkerThreadManager.js";
+import { WorkerThreadManager } from "./application/workersThreads/workers/WorkerThreadManager.js";
+
 
 export class ProcessManager {
   constructor(
@@ -46,7 +45,10 @@ export class ProcessManager {
           identifier: "queue",
           queue: {
             identifier: "processPakage",
-            message: { workerId: i, keyGroup, packageIndex }
+            message: { keyGroup, packageIndex }
+          },
+          worker: {
+            id: workerThread.id
           }
         }
         workerThread.postMessage(structData, this.convertPackageToStringJson(packageToProcess.events))

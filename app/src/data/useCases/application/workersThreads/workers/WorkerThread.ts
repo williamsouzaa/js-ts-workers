@@ -1,39 +1,9 @@
 import { Worker, isMainThread, parentPort, workerData, setEnvironmentData, getEnvironmentData } from 'worker_threads';
-import { EWorkerState } from "../../../interfaces/application/workers/EWorkerState.js"
-
-
-
-export type TPostMessageStrucData = {
-  identifier: string,
-  queue?: {
-    identifier: string,
-    message: any | TWorkerThreadSucessEventMessageReceived
-  }
-  worker?: {
-    id: number
-  }
-  binaryData?: Uint8Array<ArrayBuffer>
-}
-
-export type TWorkerThreadSucessEventMessageReceived = {
-  identifier: "received",
-  keyGroup: string,
-  packageIndex: number
-}
-
-
-
-export interface IWorkerThreadSucessEventHandler {
-  handle(structData: TPostMessageStrucData): Promise<void>
-}
-
-export interface IWorkerThreadErrorEventHandler {
-  handle(erro: Error): Promise<void>
-}
-
-export interface IWorkerThreadExitEventHandler {
-  handle(code: number): Promise<void>
-}
+import { EWorkerState } from '../../../../interfaces/application/workers/EWorkerState.js';
+import { IWorkerThreadErrorEventHandler } from '../../../../interfaces/application/workers/IWorkerThreadErrorEventHandler.js';
+import { IWorkerThreadExitEventHandler } from '../../../../interfaces/application/workers/IWorkerThreadExitEventHandler.js';
+import { IWorkerThreadSucessEventHandler } from '../../../../interfaces/application/workers/IWorkerThreadSucessEventHandler.js';
+import { TPostMessageStrucData } from '../../../../interfaces/application/workers/TPostMessageStrucData.js';
 
 
 export class WorkerThread {
