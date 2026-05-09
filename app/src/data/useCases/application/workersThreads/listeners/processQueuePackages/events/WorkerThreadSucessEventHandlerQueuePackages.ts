@@ -1,4 +1,4 @@
-import { EWorkersProcessQueue } from "../../../../../../../domain/useCases/names/index.js"
+import { E_WORKERS_PROCESS_QUEUE } from "../../../../../../../domain/useCases/names/index.js"
 import { IQueue } from "../../../../../../interfaces/application/queue/IQueue.js"
 import { IWorkerThreadSucessEventHandler } from "../../../../../../interfaces/application/workers/IWorkerThreadSucessEventHandler.js"
 import { TPostMessageStrucData } from "../../../../../../interfaces/application/workers/TPostMessageStrucData.js"
@@ -14,7 +14,7 @@ export class WorkerThreadSucessEventHandlerQueuePackages implements IWorkerThrea
 
   private async handleQueueMessage(message: TPostMessageStrucData): Promise<void> {
     if (!message.queue) throw new Error("Message queue is undefined in handleQueueMessage")
-    if (message.queue.identifier !== EWorkersProcessQueue.PROCESS_PACKAGE)  throw new Error("System expected to receive a message with identifier 'processPakage'")
+    if (message.queue.identifier !== E_WORKERS_PROCESS_QUEUE.PROCESS_PACKAGE)  throw new Error("System expected to receive a message with identifier 'processPakage'")
 
     if (message.queue.message.identifier === "received") return this.handleQueueMessageReceived(message)
     console.log(`caindo fora da classe aqui - Lidar com isso:`, message.queue.message)

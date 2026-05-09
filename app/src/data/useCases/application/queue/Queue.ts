@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto"
 import { IQueue, TQueueAddItemResponse, TQueueItem, EQueuePackageStatus, TQueueEventData, TQueueMapKeysAndEvents } from "../../../interfaces/application/queue/IQueue.js"
 
 
@@ -14,12 +15,14 @@ export class Queue implements IQueue {
     this.timeLimitToHoldingPackageInSecods = value
   }
 
-  public addItem(keyGroup: string, eventId: string, data: any): TQueueAddItemResponse {
+  public addItem(keyGroup: string, eventId: string, data: any, customLimitPackage: number | undefined): TQueueAddItemResponse {
     const currentTs = Date.now()
+
+    const limitPackageSize = !!customLimitPackage ? customLimitPackage : this.limitPerPackage
 
     if (!this.queue.has(keyGroup)) {
       const lastPackageId = 1
-      const firstPackage = { lastEventCreatedAt: currentTs, status: EQueuePackageStatus.STACKING, events: new Map().set(eventId, data) }
+      const firstPackage = { lastEventCreatedAt: currentTs, status: EQueuePackageStatus.STACKING,  limitPackageSize, events: new Map().set(eventId, data) }
       this.queue.set(keyGroup, { lastPackageId,  package: new Map().set(lastPackageId, firstPackage) });
       return { keyGroup, package: { lastPackageId, eventId, lastEventCreatedAt: currentTs, data } }
     }
@@ -35,7 +38,7 @@ export class Queue implements IQueue {
 
     const newLastPackageId = group!.lastPackageId + 1
     group!.lastPackageId = newLastPackageId
-    group!.package.set(newLastPackageId, { lastEventCreatedAt: currentTs, status: EQueuePackageStatus.STACKING, events: new Map().set(eventId, data) })
+    group!.package.set(newLastPackageId, { lastEventCreatedAt: currentTs, limitPackageSize, status: EQueuePackageStatus.STACKING, events: new Map().set(eventId, data) })
     return { keyGroup, package: { lastPackageId: newLastPackageId, eventId, lastEventCreatedAt: currentTs, data } }
   }
 
@@ -86,7 +89,7 @@ export class Queue implements IQueue {
     for (const [keyGroup, valueGroup] of this.queue){
       for (const [packageIndex, packageItem] of valueGroup.package) {
         if (packageItem.status === EQueuePackageStatus.PROCESSING) continue
-        if (packageItem.events.size == this.limitPerPackage) {
+        if (packageItem.events.size == packageItem.limitPackageSize) {
           packagesToProcess.push({keyGroup, packageIndex})
         }
       }

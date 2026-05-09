@@ -1,10 +1,10 @@
-import { EWorkersProcess, EWorkersProcessQueue } from "../../../../domain/useCases/names/index.js"
+import { E_WORKER_PROCESS, E_WORKERS_PROCESS_QUEUE } from "../../../../domain/useCases/names/index.js"
 
 
 export type TPostMessageStrucData = {
-  identifier: EWorkersProcess,
+  identifier: E_WORKER_PROCESS,
   queue?: {
-    identifier: EWorkersProcessQueue,
+    identifier: E_WORKERS_PROCESS_QUEUE,
     message: any
   }
   worker?: {

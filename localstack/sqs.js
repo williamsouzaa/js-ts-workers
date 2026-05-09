@@ -51,13 +51,10 @@ async function iniciarProdutor() {
         const payload = {
           id: `EVT-${Date.now()}-${i}`,
           obrigacao: 'efinanceira',
-          layout: 'movimentacao_finaceira',
           codLayout: '003', // O controller mapeia body.codLayout para codigoLayout
-          anoObrigacao: hoje.getFullYear(),
-          mesObrigacao: Math.floor(Math.random() * 12) + 1,
-          diaObrigacao: null,
+          ano: hoje.getFullYear(),
+          mes: Math.floor(Math.random() * 12) + 1,
           cnpjEmpresa: '12345678000199', // CNPJ Fake de teste
-
           // O controller mapeia body.evento para jsonStr.
           // Geralmente aqui vai um JSON em string com os dados brutos da obrigação.
           evento: JSON.stringify({

@@ -12,13 +12,14 @@ import { WorkerThreadExitEventHandlerQueuePackages } from "../../../../../../../
 import { IQueue } from "../../../../../../interfaces/application/queue/IQueue.js";
 import { SQSController } from "../../../../../../../presentation/controllers/aws/sqs/SQSController.js";
 import { RedisQueuePackageRepositoryAdapter } from "../../../../../../../infra/databases/repositories/redis/RedisQueuePackageRepositoryAdapter.js";
+import { BuildEntryDataFromSQSMessage } from "../../../../../../useCases/application/entryData/BuildEntryDataFromSQSMessage.js";
 
 
 
 function queuePackagesFactory(): IQueue {
   const queue = new Queue()
   queue.setLimitPerPackage(2)
-  queue.setTimeLimitToHoldingPackageInSecods(10)
+  queue.setTimeLimitToHoldingPackageInSecods(5)
   return queue
 }
 
@@ -48,9 +49,11 @@ export async function sqsQueueEfinanceiraFactory() {
 
   await workerThreadManager.init("./dist/src/data/useCases/application/workersThreads/listeners/processQueuePackages/WorkerListenerToProcessQueuePackage.js", 4)
   await sleep(5000)
+  console.log('[LOG][INFO] - sqsQueueEfinanceiraFactory - workerThreadManager:', workerThreadManager)
 
   return new SQSController(
     sqsObrigacaoEfinanceira,
+    new BuildEntryDataFromSQSMessage(),
     new ProcessManager(
       queue,
       workerThreadManager,

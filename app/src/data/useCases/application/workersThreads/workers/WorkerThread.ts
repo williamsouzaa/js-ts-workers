@@ -4,6 +4,9 @@ import { IWorkerThreadErrorEventHandler } from '../../../../interfaces/applicati
 import { IWorkerThreadExitEventHandler } from '../../../../interfaces/application/workers/IWorkerThreadExitEventHandler.js';
 import { IWorkerThreadSucessEventHandler } from '../../../../interfaces/application/workers/IWorkerThreadSucessEventHandler.js';
 import { TPostMessageStrucData } from '../../../../interfaces/application/workers/TPostMessageStrucData.js';
+import { sleep } from '../../../../../utils/sleep.js';
+
+
 
 
 export class WorkerThread {
@@ -12,7 +15,7 @@ export class WorkerThread {
   private _state!: EWorkerState
   private _worker!: Worker
   private _currentLoad: number = 0
-  private _limitHealthLoad: number = 1000 * 50
+  private _limitHealthLoad: number = 200 * 1000
 
   public get name(): string { return this._name }
   public get id(): number { return this._id }
@@ -42,14 +45,31 @@ export class WorkerThread {
   public workerIsOffline(): boolean { return this._state === EWorkerState.OFFLINE }
   public workerIsIdle(): boolean { return this._state === EWorkerState.IDLE }
 
+  private async handleToPostMessageListToWorker(structData: TPostMessageStrucData, bufferData: any): Promise<void> {
+    const binaryDataList = []
+    for (const el in bufferData) {
+      const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof el === 'string'
+        ? new TextEncoder().encode(el)
+        : new TextEncoder().encode(JSON.stringify(el))
+      binaryDataList.push(uint8ArrayData.buffer)
+    }
+    this._worker.postMessage({...structData, binaryData: binaryDataList }, binaryDataList)
+  }
+
+  private async handleToPostMessage(structData: TPostMessageStrucData, bufferData: any): Promise<void> {
+    const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof bufferData === 'string'
+        ? new TextEncoder().encode(bufferData)
+        : new TextEncoder().encode(JSON.stringify(bufferData))
+      this._worker.postMessage({...structData, binaryData: uint8ArrayData }, [uint8ArrayData.buffer])
+  }
+
   public async postMessage(structData: TPostMessageStrucData, bufferData: any): Promise<void> {
     if (this._state !== EWorkerState.IDLE) return
 
-    const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof bufferData === 'string'
-    ? new TextEncoder().encode(bufferData)
-    : new TextEncoder().encode(JSON.stringify(bufferData))
+    Array.isArray(bufferData)
+      ? await this.handleToPostMessageListToWorker(structData, bufferData)
+      : await this.handleToPostMessage(structData, bufferData)
 
-    this._worker.postMessage({...structData, binaryData: uint8ArrayData }, [uint8ArrayData.buffer])
     this.addOneToTheCurrentLoad()
   }
 

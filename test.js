@@ -1,8 +1,5 @@
-let x = 0
+const x = new Map()
+x.set('EVT-1778334286900-0','{"from":{"identifider":"sqs","sqs":{"messageId":"896efb83-8e5c-4143-81eb-49a37aa62ac3","receiptId":"NThhN2FjZGYtZjYwZC00NjRkLTk0OWQtYWZhODEzMWE1NDU0IGFybjphd3M6c3FzOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6ZmlsYS1kZS1wcm9jZXNzYW1lbnRvIDg5NmVmYjgzLThlNWMtNDE0My04MWViLTQ5YTM3YWE2MmFjMyAxNzc4MzM0NDI4Ljg0NzY0NQ=="}},"event":{"obrigacao":"efinanceira","efinanceira":{"cnpjEmpresa":"12345678000199","ano":2026,"mes":11,"anoMes":202611,"codLayout":"003","evento":{"id":"EVT-1778334286900-0"}}}}')
+x.set('EVT-1778334286901-5','{"from":{"identifider":"sqs","sqs":{"messageId":"2486f867-b39b-4aa3-8d3c-3816141bee12","receiptId":"ZTY5OTYzYWQtZWI4ZC00ODA4LWFkOTEtMjlmYjBhOWZiMDlhIGFybjphd3M6c3FzOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6ZmlsYS1kZS1wcm9jZXNzYW1lbnRvIDI0ODZmODY3LWIzOWItNGFhMy04ZDNjLTM4MTYxNDFiZWUxMiAxNzc4MzM0NDI4Ljg0Nzg4OTQ="}},"event":{"obrigacao":"efinanceira","efinanceira":{"cnpjEmpresa":"12345678000199","ano":2026,"mes":11,"anoMes":202611,"codLayout":"003","evento":{"id":"EVT-1778334286901-5"}}}}')
 
-x += 1
-x += 1
-x += 1
-console.log(x)
-x -= 1
-console.log(x)
+postMessage({...}, ['{"from": ...}', '{"from"}: ...'])

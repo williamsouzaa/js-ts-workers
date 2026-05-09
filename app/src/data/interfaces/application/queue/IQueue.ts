@@ -3,6 +3,7 @@ export type TQueueEventData = Object
 export type TQueuePackage = {
   lastEventCreatedAt: number;
   status: EQueuePackageStatus
+  limitPackageSize: number
   events: Map<string, TQueueEventData>;
 }
 export type TQueueGroup = {
@@ -35,7 +36,7 @@ export interface IQueue {
   timeLimitToHoldingPackageInSecods: number
   queue: TQueueItem
 
-  addItem(keyGroup: string, eventId: string, data: any): TQueueAddItemResponse
+  addItem(keyGroup: string, eventId: string, data: any, customLimitPackage?: number): TQueueAddItemResponse
   deletePackageItem(keyGroup: string, packageIndex: number, eventId: string): void
   deletePackage(keyGroup: string, packageIndex: number): void
   getPackagesWithTimeLimitExpired(): Array<TQueueGroupPackageIndex>

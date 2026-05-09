@@ -1,10 +1,13 @@
-import { pipeline } from "node:stream";
-import { TEntryData, TEntryDataReceived, TRawEntryData, TReceived, TTEntryDataEvent } from "../../domain/useCases/data/TEntryData.js";
-import { IQueue, TQueueAddItemResponse, TQueueGroupPackageIndex, TQueueMapKeysAndEvents } from "../interfaces/application/queue/IQueue.js";
-import { RedisClient } from "../../infra/databases/connections/redis/RedisConnect.js";
+import { TEntryData } from "../../domain/useCases/data/TEntryData.js";
+import { IQueue,  TQueueGroupPackageIndex } from "../interfaces/application/queue/IQueue.js";
 import { WorkerThreadManager } from "./application/workersThreads/workers/WorkerThreadManager.js";
 import { IWriteQueuePackageRepository } from "../interfaces/application/repositories/queuePackages/IWriteQueuePackageRepository.js";
-import { EWorkersProcess, EWorkersProcessQueue } from "../../domain/useCases/names/index.js";
+import { E_LAYOUTS_PACKAGE_SIZE, E_OBRIGACAO, E_OBRIGACAO_CODIGO_LAYOUT, E_WORKER_PROCESS, E_WORKERS_PROCESS_QUEUE } from "../../domain/useCases/names/index.js";
+import { sleep } from "../../utils/sleep.js";
+import { WorkerThread } from "./application/workersThreads/workers/WorkerThread.js";
+
+
+
 
 
 export class ProcessManager {
@@ -12,23 +15,18 @@ export class ProcessManager {
     private queue: IQueue,
     private workerThreadManager: WorkerThreadManager,
     private writeQueuePackageRepository: IWriteQueuePackageRepository
-  ) {}
+  ) {
+    setInterval(() => this.handle([]), 5000)
+  }
 
-  public async handle(entryDataList: Array<TEntryDataReceived>): Promise<void> {
-    const dataPackageToPersist = new Array()
-    for (const { entryData, rawEntryData, received } of entryDataList) {
-      const eventId = entryData.event.id
-      const keyGroup = this.buildKeyGroup(entryData.event)
-      const queueResponse = this.queue.addItem(keyGroup, eventId, entryData)
-      dataPackageToPersist.push({rawEntryData, received, queueResponse})
-    }
 
-    await this.writeQueuePackageRepository.writePackage(dataPackageToPersist)
 
+  public async handle(entryDataList: Array<TEntryData>, reprocessing: boolean = false): Promise<void> {
+
+    if(!reprocessing !== false) await this.handleToAddElementInQueueAndPersist(entryDataList)
     const packagesExpired = this.queue.getPackagesWithTimeLimitExpired()
     const packageAlredyFoProcess = this.queue.collectPackagesAlredyForProcess()
     const packagerToProcess = [...packagesExpired, ...packageAlredyFoProcess]
-
     if (packagerToProcess.length === 0) return
 
     const totalWorkers = this.workerThreadManager.workerThreadsPool.size
@@ -36,29 +34,99 @@ export class ProcessManager {
 
     for (let i = 0; i < totalWorkers; i++) {
       const packagePart = packagePartsToProcess[i]
+
       const workerThread = this.workerThreadManager.workerThreadsPool.get(i)
       if (!packagePart || !workerThread) throw new Error("Erro ao distribuir os pacotes para os workers.")
+
+      await this.awaitWorkerThreadIsIdle(workerThread)
 
       for (const { keyGroup, packageIndex } of packagePart) {
         const packageToProcess = this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
         if (!packageToProcess) continue
 
         const structData = {
-          identifier: EWorkersProcess.QUEUE,
+          identifier: E_WORKER_PROCESS.QUEUE,
           queue: {
-            identifier: EWorkersProcessQueue.PROCESS_PACKAGE,
+            identifier: E_WORKERS_PROCESS_QUEUE.PROCESS_PACKAGE,
             message: { keyGroup, packageIndex }
           },
           worker: {
             id: workerThread.id
           }
         }
-        workerThread.postMessage(structData, this.convertPackageToStringJson(packageToProcess.events))
+
+        const lista_eventos = []
+        for (const [key, event] of packageToProcess.events) {
+          lista_eventos.push(event)
+        }
+
+        workerThread.postMessage(structData, [...packageToProcess.events])
       }
     }
   }
 
- brokePackagesToParts(packagesToProcess: Array<TQueueGroupPackageIndex>, totalWorkers: number): Array<Array<TQueueGroupPackageIndex>>  {
+
+  private async handleToAddElementInQueueAndPersist(entryDataList: Array<TEntryData>): Promise<void> {
+    const dataPackageToPersist = new Array()
+
+    for (const entryData of entryDataList) {
+      const entryDataString = JSON.stringify(entryData)
+      const queueResponse = this.queue.addItem(
+        this.createKeyGroup(entryData),
+        this.getEventId(entryData),
+        entryDataString,
+        this.getPackageSizeByCodeDynamic(entryData)
+      )
+      dataPackageToPersist.push({entryDataString: entryDataString, queueResponse})
+    }
+    await this.writeQueuePackageRepository.writePackage(dataPackageToPersist)
+  }
+
+  private getPackageSizeByCodeDynamic(entryData: TEntryData): number | undefined {
+    let code = null
+    if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) code = entryData.event.efinanceira!.codLayout
+
+    const chaveDoEnum = Object.keys(E_OBRIGACAO_CODIGO_LAYOUT).find(
+      (key) => E_OBRIGACAO_CODIGO_LAYOUT[key as keyof typeof E_OBRIGACAO_CODIGO_LAYOUT] === code
+    ) as keyof typeof E_LAYOUTS_PACKAGE_SIZE | undefined;
+
+    if (chaveDoEnum && chaveDoEnum in E_LAYOUTS_PACKAGE_SIZE) return E_LAYOUTS_PACKAGE_SIZE[chaveDoEnum];
+    return undefined;
+  }
+
+  private getEventId(entryData: TEntryData): string {
+    if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) return entryData.event.efinanceira!.evento.id
+    throw new Error('Layout ainda nao implementado')
+  }
+
+  private async awaitWorkerThreadIsIdle(workerThread: WorkerThread): Promise<void> {
+    while(true) {
+        if(workerThread.workerIsBusy()) {
+          await sleep(200)
+          continue
+        }
+        break
+      }
+  }
+
+  private createKeyGroup(entryData: TEntryData): string {
+    const keyParts: any = []
+
+    if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) {
+      keyParts.push(
+        E_OBRIGACAO.E_FINANCEIRA,
+        entryData.event.efinanceira?.codLayout,
+        entryData.event.efinanceira?.cnpjEmpresa,
+        entryData.event.efinanceira?.ano,
+        entryData.event.efinanceira?.mes,
+      )
+    }
+
+    if (keyParts.length === 0) throw new Error('Erro ao montar keyParts em ProcessManager.getKeyGroup')
+    return keyParts.filter((part: any) => part !== undefined && part !== null).join('#');
+  }
+
+ private brokePackagesToParts(packagesToProcess: Array<TQueueGroupPackageIndex>, totalWorkers: number): Array<Array<TQueueGroupPackageIndex>>  {
     const packagesPartsToEachaWorker = new Array()
     for (let i = 0; i < totalWorkers; i++) {
       const sizeOfSlice = Math.ceil(packagesToProcess.length / totalWorkers)
@@ -66,27 +134,5 @@ export class ProcessManager {
       packagesPartsToEachaWorker.push(part)
     }
     return packagesPartsToEachaWorker
-  }
-
-  private convertPackageToStringJson(eventData: any): string {
-    const eventsArrayStrings: string[] = [];
-    for (const [eventId, data] of eventData) {
-      const eventJson = JSON.stringify(data.event);
-      const eventoCompletoStr = `{"eventId":"${eventId}", "event":${eventJson}, "rawData":${data.rawData}}`;
-      eventsArrayStrings.push(eventoCompletoStr);
-    }
-    return `[${eventsArrayStrings.join(',')}]`
-  }
-
-  private buildKeyGroup(event: TTEntryDataEvent): string {
-    const keyParts = [
-      event.obrigacao,
-      event.cnpjEmpresa,
-      event.codigoLayout,
-      event.anoObrigacao,
-      event.mesObrigacao,
-      event.diaObrigacao
-    ];
-    return keyParts.filter(part => part !== undefined && part !== null).join('#');
   }
 }
