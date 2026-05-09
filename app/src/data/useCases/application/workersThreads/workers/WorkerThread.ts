@@ -47,7 +47,7 @@ export class WorkerThread {
 
   private async handleToPostMessageListToWorker(structData: TPostMessageStrucData, bufferData: any): Promise<void> {
     const binaryDataList = []
-    for (const el in bufferData) {
+    for (const el of bufferData) {
       const uint8ArrayData: Uint8Array<ArrayBuffer> = typeof el === 'string'
         ? new TextEncoder().encode(el)
         : new TextEncoder().encode(JSON.stringify(el))

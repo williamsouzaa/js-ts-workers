@@ -1,4 +1,4 @@
-import { E_WORKERS_PROCESS_QUEUE } from "../../../../../../../domain/useCases/names/index.js"
+import { E_WORKER_PROCESS, E_WORKERS_PROCESS_QUEUE } from "../../../../../../../domain/useCases/names/index.js"
 import { IQueue } from "../../../../../../interfaces/application/queue/IQueue.js"
 import { IWorkerThreadSucessEventHandler } from "../../../../../../interfaces/application/workers/IWorkerThreadSucessEventHandler.js"
 import { TPostMessageStrucData } from "../../../../../../interfaces/application/workers/TPostMessageStrucData.js"
@@ -7,9 +7,9 @@ export class WorkerThreadSucessEventHandlerQueuePackages implements IWorkerThrea
   constructor(private queue: IQueue) {}
 
   public async handle(message: TPostMessageStrucData): Promise<void> {
-    if (message.identifier === "queue") return this.handleQueueMessage(message)
+    if (message.identifier === E_WORKER_PROCESS.QUEUE) return this.handleQueueMessage(message)
 
-    console.log(`caindo fora da classe aqui - Lidar com isso:`)
+    throw new Error('tipo da mensagem ainda não suportado.')
   }
 
   private async handleQueueMessage(message: TPostMessageStrucData): Promise<void> {
@@ -21,7 +21,7 @@ export class WorkerThreadSucessEventHandlerQueuePackages implements IWorkerThrea
   }
 
   private async handleQueueMessageReceived(message: TPostMessageStrucData): Promise<void> {
-    this.queue.clearEventsInPackage(message.queue!.message.keyGroup, message.queue!.message.packageIndex)
-    console.log(`Pacote processado e eventos limpos da fila - keyGroup: ${message.queue!.message.keyGroup} - packageIndex: ${message.queue!.message.packageIndex}`)
+    this.queue.clearEventsInPackage(message.queue!.processPackage.keyGroup, message.queue!.processPackage.packageIndex)
+    console.log(`Pacote processado e eventos limpos da fila - keyGroup: ${message.queue!.processPackage.keyGroup} - packageIndex: ${message.queue!.processPackage.packageIndex}`)
   }
 }

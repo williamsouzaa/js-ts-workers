@@ -53,7 +53,8 @@ async function iniciarProdutor() {
           obrigacao: 'efinanceira',
           codLayout: '003', // O controller mapeia body.codLayout para codigoLayout
           ano: hoje.getFullYear(),
-          mes: Math.floor(Math.random() * 12) + 1,
+          // mes: Math.floor(Math.random() * 12) + 1,
+          mes: 5,
           cnpjEmpresa: '12345678000199', // CNPJ Fake de teste
           // O controller mapeia body.evento para jsonStr.
           // Geralmente aqui vai um JSON em string com os dados brutos da obrigação.

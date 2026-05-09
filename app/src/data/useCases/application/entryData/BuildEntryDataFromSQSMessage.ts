@@ -32,14 +32,12 @@ export class BuildEntryDataFromSQSMessage implements IBuildEntryData<TQueueMessa
         obrigacao: message.obrigacao as E_OBRIGACAO,
         efinanceira: {
           cnpjEmpresa: message.cnpjEmpresa,
+          idGov: message.id,
           ano: message.ano,
           mes: message.mes,
           anoMes: (message.ano * 100) + message.mes,
           codLayout: message.codLayout,
-          evento: {
-            id: message.id,
-            valor: message.valor
-          }
+          evento: message.evento
         }
       }
     }

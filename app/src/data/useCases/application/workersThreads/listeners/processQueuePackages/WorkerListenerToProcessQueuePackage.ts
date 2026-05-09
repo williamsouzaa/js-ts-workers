@@ -15,7 +15,7 @@ class WorkerListenerToProcessQueuePackage implements IWorkerThreadListener {
   private listen(listener: IParentPortWorkerThread): void {
      parentPort!.on('message', async (message: TPostMessageStrucData) => {
       parentPort!.postMessage(this.receivedMessage(message))
-      listener.handle(message)
+      await listener.handle(message)
     })
   }
 
@@ -26,8 +26,10 @@ class WorkerListenerToProcessQueuePackage implements IWorkerThreadListener {
         identifier: E_WORKERS_PROCESS_QUEUE.PROCESS_PACKAGE,
         message: {
           identifier: "received",
-          keyGroup: structData.queue!.message!.keyGroup,
-          packageIndex: structData.queue!.message!.packageIndex
+        },
+        processPackage: {
+          keyGroup: structData.queue!.processPackage!.keyGroup,
+          packageIndex: structData.queue!.processPackage!.packageIndex
         },
       },
       worker: {

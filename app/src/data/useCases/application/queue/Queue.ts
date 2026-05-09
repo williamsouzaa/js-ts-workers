@@ -30,7 +30,7 @@ export class Queue implements IQueue {
     const group = this.queue.get(keyGroup)
     const lastPackage = group!.package.get(group!.lastPackageId)
 
-    if (lastPackage!.events.size < this.limitPerPackage) {
+    if (lastPackage!.events.size <= this.limitPerPackage) {
       lastPackage!.lastEventCreatedAt = currentTs
       lastPackage!.events.set(eventId, data)
       return { keyGroup, package: { lastPackageId: group!.lastPackageId, eventId, lastEventCreatedAt: currentTs, data } }

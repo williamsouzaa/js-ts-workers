@@ -16,10 +16,8 @@ export type TEntryDataEventEfinanceira = {
   mes: number
   anoMes: number
   codLayout: E_OBRIGACAO_CODIGO_LAYOUT
-  evento: {
-    id: string
-    valor: string
-  }
+  idGov: string
+  evento: any
 }
 
 export type TEntryData = {

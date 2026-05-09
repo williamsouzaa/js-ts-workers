@@ -5,10 +5,7 @@ import { IWriteQueuePackageRepository } from "../interfaces/application/reposito
 import { E_LAYOUTS_PACKAGE_SIZE, E_OBRIGACAO, E_OBRIGACAO_CODIGO_LAYOUT, E_WORKER_PROCESS, E_WORKERS_PROCESS_QUEUE } from "../../domain/useCases/names/index.js";
 import { sleep } from "../../utils/sleep.js";
 import { WorkerThread } from "./application/workersThreads/workers/WorkerThread.js";
-
-
-
-
+import { TPostMessageStrucData } from "../interfaces/application/workers/TPostMessageStrucData.js";
 
 export class ProcessManager {
   constructor(
@@ -19,11 +16,9 @@ export class ProcessManager {
     setInterval(() => this.handle([]), 5000)
   }
 
-
-
   public async handle(entryDataList: Array<TEntryData>, reprocessing: boolean = false): Promise<void> {
-
     if(!reprocessing !== false) await this.handleToAddElementInQueueAndPersist(entryDataList)
+
     const packagesExpired = this.queue.getPackagesWithTimeLimitExpired()
     const packageAlredyFoProcess = this.queue.collectPackagesAlredyForProcess()
     const packagerToProcess = [...packagesExpired, ...packageAlredyFoProcess]
@@ -34,33 +29,34 @@ export class ProcessManager {
 
     for (let i = 0; i < totalWorkers; i++) {
       const packagePart = packagePartsToProcess[i]
-
       const workerThread = this.workerThreadManager.workerThreadsPool.get(i)
       if (!packagePart || !workerThread) throw new Error("Erro ao distribuir os pacotes para os workers.")
-
       await this.awaitWorkerThreadIsIdle(workerThread)
 
       for (const { keyGroup, packageIndex } of packagePart) {
         const packageToProcess = this.queue.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
-        if (!packageToProcess) continue
 
+        if (!packageToProcess) continue
         const structData = {
           identifier: E_WORKER_PROCESS.QUEUE,
           queue: {
             identifier: E_WORKERS_PROCESS_QUEUE.PROCESS_PACKAGE,
-            message: { keyGroup, packageIndex }
+            message: {
+              identifier: "mainThread"
+            },
+            processPackage: { keyGroup, packageIndex }
           },
           worker: {
             id: workerThread.id
           }
+        } as TPostMessageStrucData
+
+        const events = []
+        for (const [_, event] of packageToProcess.events) {
+          events.push(event)
         }
 
-        const lista_eventos = []
-        for (const [key, event] of packageToProcess.events) {
-          lista_eventos.push(event)
-        }
-
-        workerThread.postMessage(structData, [...packageToProcess.events])
+        workerThread.postMessage(structData, events)
       }
     }
   }
@@ -95,7 +91,7 @@ export class ProcessManager {
   }
 
   private getEventId(entryData: TEntryData): string {
-    if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) return entryData.event.efinanceira!.evento.id
+    if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) return entryData.event.efinanceira!.idGov
     throw new Error('Layout ainda nao implementado')
   }
 

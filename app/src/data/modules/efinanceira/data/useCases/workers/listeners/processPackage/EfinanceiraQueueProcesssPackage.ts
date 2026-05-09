@@ -1,17 +1,25 @@
 import { E_WORKERS_PROCESS_QUEUE } from "../../../../../../../../domain/useCases/names/index.js";
 import { IParentPortWorkerThread } from "../../../../../../../interfaces/application/workers/IParentPortWorkerThread.js";
 import { TPostMessageStrucData } from "../../../../../../../interfaces/application/workers/TPostMessageStrucData.js";
+import util from 'util'
+
 
 export class EfinanceiraQueueProcesssPackage implements IParentPortWorkerThread {
   public async handle(structData: TPostMessageStrucData): Promise<void> {
-
-    console.log("EfinanceiraQueueProcesssPackage - structData: ", structData)
-
     if (!this.isValidMessageToProcess(structData)) {
       throw new Error("ParentPortWorkerThreadQueueProcesssPackage - Invalid message to process")
     }
-    // const messageToProcess = this.handleToBuildMessageToProcess(structData)
-    // console.log("EfinanceiraQueueProcesssPackage - messageToProcess: ", messageToProcess)
+
+    const messageToProcess = this.handleToBuildMessageToProcess(structData)
+
+    const logCompleto = util.inspect(messageToProcess, {
+      showHidden: false,
+      depth: null,
+      colors: true
+    });
+    console.log(logCompleto);
+
+    console.log("EfinanceiraQueueProcesssPackage - messageToProcess", logCompleto)
 
     // CONVERTER messageToProcess.data em um tipo layout correto se necessario - 1 primera serializacao
     // CONVERTER EM XML
@@ -26,11 +34,15 @@ export class EfinanceiraQueueProcesssPackage implements IParentPortWorkerThread 
   }
 
   private handleToBuildMessageToProcess(structData: TPostMessageStrucData): TPostMessageStrucData {
+    const data: any = []
     const decoder = new TextDecoder('utf-8');
-    const parsedData = decoder.decode(structData.binaryData);
-    const data = JSON.parse(parsedData)
-
-    structData['data'] = data
+    for(const el of structData.binaryData as Array<Uint8Array<ArrayBuffer>>) {
+      const parsedData = JSON.parse(decoder.decode(el))
+      parsedData.event.efinanceira.evento = JSON.parse(parsedData.event.efinanceira.evento)
+      data.push(parsedData)
+    }
+    structData['entryData'] = data
+    delete structData.binaryData
     return structData
   }
 }
