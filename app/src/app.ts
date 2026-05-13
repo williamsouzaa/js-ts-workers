@@ -1,5 +1,6 @@
-import { RedisClient } from "./infra/databases/connections/redis/RedisConnect.js";
-import { queueControllerFactory } from "./main/factories/controllers/queue/queueControllerFactory.js";
+import { RedisClient } from "./shared/infra/databases/connections/redis/RedisConnect.js"
+import { queueControllerFactory } from "./shared/main/factories/controllers/queue/queueControllerFactory.js"
+
 
 class App {
   public async handle(): Promise<void> {
