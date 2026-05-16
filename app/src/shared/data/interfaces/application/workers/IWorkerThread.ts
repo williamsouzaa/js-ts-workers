@@ -1,18 +1,24 @@
-import { EWorkerState } from "./EWorkerState.js"
 import { Worker } from 'worker_threads';
 import { TPostMessageStrucData } from "./IParentPortWorkerThread.js";
 
-export interface IWorkerThread {
+export enum E_WORKER_STATE {
+  BUSY = 'BUSY',
+  IDLE = 'IDLE',
+  OFFLINE = 'OFFLINE'
+}
+
+
+export interface IWorkerThread<TEntryData> {
   readonly id: number
   readonly name: string
-  readonly state: EWorkerState
+  readonly state: E_WORKER_STATE
   readonly worker: Worker
 
   handle(id: number, name: string, pathWorkerFile: string): Promise<void>
-  changeStateTo(state: EWorkerState): void
+  changeStateTo(state: E_WORKER_STATE): void
   workerIsBusy(): boolean
   workerIsOffline(): boolean
   workerIsIdle(): boolean
-  postMessage(structData: TPostMessageStrucData, bufferData: any): Promise<void>
+  postMessage(structData: TPostMessageStrucData<TEntryData>, bufferData: any): Promise<void>
 
 }

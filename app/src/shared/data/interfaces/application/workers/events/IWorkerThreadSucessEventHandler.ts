@@ -1,5 +1,5 @@
 import { TPostMessageStrucData } from "../IParentPortWorkerThread.js";
 
-export interface IWorkerThreadSucessEventHandler {
-  handle(structData: TPostMessageStrucData): Promise<void>
+export interface IWorkerThreadSucessEventHandler<TEntryData> {
+  handle(structData: TPostMessageStrucData<TEntryData>): Promise<void>
 }

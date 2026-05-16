@@ -1,17 +1,18 @@
-import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/aws/sqs/IGetBatchMessagesInQueue.js";
-import { TQueueMessage } from "../../../../data/interfaces/application/aws/sqs/TQueueMessage.js";
-import { ProcessManager } from "../../../../data/useCases/ProcessManager.js";
-import { IBuildEntryData } from "../../../../domain/useCases/data/entryData/IBuildEntryData.js";
-import { IQueueController, EQueueController } from "../../../interfaces/IQueueController.js";
+import { FiscalOBligationsOrchestrator } from "../../../../../modules/fiscalOBligations/data/useCases/FiscalObligartionsOrchestrator.js";
+import { TFiscalOBligationsEntryData } from "../../../../../modules/fiscalOBligations/domain/contracts/TFiscalOBligartionsEntryData.js";
+import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IGetBatchMessagesInQueue.js";
+import { TQueueMessage } from "../../../../data/interfaces/application/queue/TQueueMessage.js";
+import { IBuildEntryData } from "../../../../domain/buildEntryData/IBuildEntryData.js";
 
+import { IQueueController, EQueueController } from "../../../interfaces/queue/IQueueController.js";
 
 export class SQSController implements IQueueController {
   public indentifier: EQueueController = EQueueController.AWS_SQS;
 
   constructor(
     private getBatchMessagesInQueue: IGetBatchMessagesInQueue,
-    private buildEntryData: IBuildEntryData<TQueueMessage>,
-    private processManager: ProcessManager
+    private buildEntryData: IBuildEntryData<TQueueMessage, TFiscalOBligationsEntryData>,
+    private fiscalOBligationsOrchestrator: FiscalOBligationsOrchestrator
   ) {}
 
   public async handle(): Promise<void> {
@@ -31,7 +32,7 @@ export class SQSController implements IQueueController {
         entryDataList.push(entryData)
       }
 
-      await this.processManager.handle(entryDataList)
+      await this.fiscalOBligationsOrchestrator.handle(entryDataList)
     } catch (error) {
       console.log('[LOG][ERROR] - SQSController - handle - erro: ', error)
     }

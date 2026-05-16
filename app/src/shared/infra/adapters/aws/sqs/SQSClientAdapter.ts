@@ -1,7 +1,7 @@
 import { SQSClient, ReceiveMessageCommand, ReceiveMessageCommandOutput, DeleteMessageBatchCommand } from "@aws-sdk/client-sqs";
-import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/aws/sqs/IGetBatchMessagesInQueue.js";
-import { TQueueMessage } from "../../../../data/interfaces/application/aws/sqs/TQueueMessage.js";
-import { IDeleteBatchMessagesInQueue, TParamDeleteBatchMessagesInQueue } from "../../../../data/interfaces/application/aws/sqs/IDeleteBatchMessagesInQueue.js";
+import { IDeleteBatchMessagesInQueue, TParamDeleteBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IDeleteBatchMessagesInQueue.js";
+import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IGetBatchMessagesInQueue.js";
+import { TQueueMessage } from "../../../../data/interfaces/application/queue/TQueueMessage.js";
 
 
 export class SQSClientAdapter implements IGetBatchMessagesInQueue, IDeleteBatchMessagesInQueue {

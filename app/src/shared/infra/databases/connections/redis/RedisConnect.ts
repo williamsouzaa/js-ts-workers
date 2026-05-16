@@ -1,16 +1,13 @@
 import { RedisClientType, createClient } from 'redis'
 import { IDatabaseConnect } from '../../../../data/interfaces/application/database/IDatabaseConnect.js'
 import { IDatabaseDisconnect } from '../../../../data/interfaces/application/database/IDatabaseDisconnect.js'
-import process from 'node:process';
+import { REDIS } from '../../../../../environment.js'
 
 export class RedisClient implements IDatabaseConnect, IDatabaseDisconnect {
   static client: RedisClientType = createClient({
-    username: process.env.DATABASE_REDIS_USER as string,
-    password: process.env.DATABASE_REDIS_PASSWORD as string,
-    socket: {
-      host: process.env.DATABASE_REDIS_HOST as string,
-      port: parseInt(process.env.DATABASE_REDIS_PORT as string, 10)
-    }
+    username: REDIS.USER,
+    password: REDIS.PASSWORD,
+    socket: { host: REDIS.HOST, port: REDIS.PORT }
   })
 
   async connect(): Promise<void> {
