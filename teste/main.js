@@ -1,15 +1,37 @@
-import { Worker } from 'worker_threads'
+import { fork } from 'child_process';
+import path from 'path';
 
-const xmlString = `<root><element>Data</element></root>`;
+console.log('====================================');
+console.log('[MAESTRO] Iniciando o orquestrador...');
+console.log('====================================\n');
 
-const worker = new Worker('./worker.js', {
-  workerData: { xml: xmlString }
+// 1. Cria o processo filho chamando o arquivo worker.js
+const worker = fork('./worker.js');
+
+// 2. Escuta as respostas enviadas pelo filho
+worker.on('message', (resposta) => {
+  if (resposta.status === 'SUCESSO') {
+    console.log(`\n[MAESTRO] Recebi a confirmação! Lote ${resposta.loteId} assinado e validado.`);
+    console.log(`[MAESTRO] Total processado: R$ ${resposta.totalProcessado}`);
+
+    // Como é só um teste, vamos matar o processo filho e encerrar tudo
+    console.log('[MAESTRO] Encerrando o worker e finalizando o sistema...');
+    worker.kill();
+    process.exit(0);
+  }
 });
 
-worker.on('message', (result) => {
-  console.log('Parsed XML root tag:', result);
+worker.on('error', (erro) => {
+  console.error('[MAESTRO] Socorro! O worker deu erro:', erro);
 });
 
-worker.on('error', (err) => {
-  console.error('Worker error:', err);
-})
+// 3. Simula o envio de uma mensagem do SQS para o filho
+console.log('[MAESTRO] Enviando lote de dados para o Worker processar...\n');
+worker.send({
+  comando: 'PROCESSAR_LOTE',
+  loteId: 998877,
+  movimentacoes: [
+    { conta: '123-4', valor: 5000.00 },
+    { conta: '987-6', valor: 1500.50 }
+  ]
+});

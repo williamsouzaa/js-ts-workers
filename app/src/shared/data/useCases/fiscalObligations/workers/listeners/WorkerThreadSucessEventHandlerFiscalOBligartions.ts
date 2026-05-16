@@ -20,6 +20,8 @@ export class WorkerThreadSucessEventHandlerfiscalOBligations implements IWorkerT
   }
 
   private async handleQueueMessageReceived(message: TPostMessageStrucData<TFiscalOBligationsEntryData>): Promise<void> {
+    console.log('handleQueueMessageReceived', message)
+
     this.fiscalOBligationsEventsPackage.clearEventsInPackage(
       message.fiscalOBligationsEventsPackage!.packageReference.keyGroup,
       message.fiscalOBligationsEventsPackage!.packageReference.packageIndex

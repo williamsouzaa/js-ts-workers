@@ -1,4 +1,3 @@
-import { parentPort, workerData } from "worker_threads"
 import { IParentPortWorkerThread, TPostMessageStrucData } from "../../../../../../shared/data/interfaces/application/workers/IParentPortWorkerThread.js"
 import { IWorkerThreadListener } from "../../../../../../shared/data/interfaces/application/workers/IWorkerThreadListener.js"
 import { RedisClient } from "../../../../../../shared/infra/databases/connections/redis/RedisConnect.js"
@@ -12,6 +11,11 @@ import { Xmlbuilder2EfinanceiraObjectToXmlConverterAdapter } from "../../../../.
 
 import libxmljs from 'libxmljs2';
 
+// child_process: identity comes from env vars set by the parent via fork()
+const workerData = {
+  name: process.env.WORKER_NAME ?? 'unknown',
+  workerId: parseInt(process.env.WORKER_ID ?? '0', 10)
+}
 
 class WorkerListenerToProcessFiscalOBligartions implements IWorkerThreadListener {
   public async handle() {
@@ -19,7 +23,6 @@ class WorkerListenerToProcessFiscalOBligartions implements IWorkerThreadListener
 
     const efinanceiraValidateXmlWithXsdAdapter = new EfinanceiraValidateXmlWithXsdLibxmljsAdapter()
     efinanceiraValidateXmlWithXsdAdapter.setAllLayoutsXSD()
-
 
     this.listen(
       new EfinanceiraProcesssPackageListener(
@@ -33,15 +36,43 @@ class WorkerListenerToProcessFiscalOBligartions implements IWorkerThreadListener
     )
   }
 
-
   private listen(listener: IParentPortWorkerThread<Array<TFiscalOBligationsEntryData>>): void {
-     parentPort!.on('message', async (message: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>) => {
-      parentPort!.postMessage(this.receivedMessage(message))
-      await listener.handle(message)
+    // child_process: use process.on('message') instead of parentPort.on('message')
+    process.on('message', async (message: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>) => {
+      // Decode base64-encoded binary data sent by the parent (AWorkerThread)
+      const decodedMessage = this.decodeBinaryData(message)
+      process.send!(this.receivedMessage(decodedMessage))
+      await listener.handle(decodedMessage)
     })
   }
 
-  private receivedMessage(structData: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>): TPostMessageStrucData<TFiscalOBligationsEntryData> {
+  // The parent encodes ArrayBuffers as base64 strings because child_process IPC
+  // uses JSON serialisation. We reconstruct Uint8Array instances here so the
+  // rest of the pipeline (handleToBuildMessageToProcess, etc.) works unchanged.
+  private decodeBinaryData(
+    message: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>
+  ): TPostMessageStrucData<Array<TFiscalOBligationsEntryData>> {
+    const encoding = (message as any)._encoding as string | undefined
+    if (!encoding) return message
+
+    if (encoding === 'base64list' && Array.isArray(message.binaryData)) {
+      const decoded = (message.binaryData as unknown as string[]).map(
+        (b64) => new Uint8Array(Buffer.from(b64, 'base64'))
+      )
+      return { ...message, binaryData: decoded as any }
+    }
+
+    if (encoding === 'base64' && typeof message.binaryData === 'string') {
+      const decoded = new Uint8Array(Buffer.from(message.binaryData as unknown as string, 'base64'))
+      return { ...message, binaryData: decoded as any }
+    }
+
+    return message
+  }
+
+  private receivedMessage(
+    structData: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>
+  ): TPostMessageStrucData<TFiscalOBligationsEntryData> {
     return {
       identifier: E_WORKER_PROCESS.FISCAL_OBLIGARTIONS_EVENTS_PACKAGE,
       message: "received",

@@ -1,5 +1,5 @@
 import { IParentPortWorkerThread, TPostMessageStrucData } from "../../../../../shared/data/interfaces/application/workers/IParentPortWorkerThread.js";
-import { parentPort } from "worker_threads"
+// child_process: no parentPort import needed — use process.send() directly
 import { IObjectToXmlConverter } from "../../../../../shared/domain/fiscalObligations/IObjectToXmlConverter.js";
 import { IObjectToXsdMapper } from "../../../../../shared/domain/fiscalObligations/IObjectToXsdMapper.js";
 import { IValidateXmlWithXsd } from "../../../../../shared/domain/fiscalObligations/IValidateXmlWithXsd.js";
@@ -35,18 +35,7 @@ export class EfinanceiraProcesssPackageListener implements IParentPortWorkerThre
     console.log("objectToXsdMapper", this.objectToXsdMapper)
     console.log("objectToXmlConverter", this.objectToXmlConverter)
     console.log("validateXmlWithXsd", this.validateXmlWithXsd)
-
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
-    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    console.log("structData", structData)
 
     console.log('########################################################################################')
     console.log('########################################################################################')
@@ -95,9 +84,9 @@ export class EfinanceiraProcesssPackageListener implements IParentPortWorkerThre
     //     // console.log("EfinanceiraProcesssPackageListener - handle - xmlData >>", xmlData)
     //   }
 
-    //   parentPort!.postMessage({ identifier: 'success', success: packageReference })
+    //   process.send!({ identifier: 'success', success: packageReference })
     // } catch(error) {
-    //   parentPort!.postMessage({
+    //   process.send!({
     //     identifier: 'error',
     //     error: structData.fiscalOBligationsEventsPackage!.packageReference
     //   })
