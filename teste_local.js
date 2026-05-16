@@ -207,22 +207,6 @@ function collectPackagesAlredyForProcess() {
   return packagesToProcess
 }
 
-
-// console.log(collectPackagesAlredyForProcess())
-
-// console.log("=============================================================")
-// console.log("=============================================================")
-// console.log("=============================================================")
-// console.log(util.inspect(queue, {
-//     showHidden: false,
-//     depth: null,
-//     colors: true
-// }));
-// console.log("=============================================================")
-// console.log("=============================================================")
-// console.log("=============================================================")
-
-
 function getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex) {
   if (!queue.has(keyGroup)) return
   const group = queue.get(keyGroup)

@@ -1,10 +1,11 @@
-import { error } from "console";
 import { IParentPortWorkerThread, TPostMessageStrucData } from "../../../../../shared/data/interfaces/application/workers/IParentPortWorkerThread.js";
-import { logDepth } from "../../../../../utils/logDepth.js";
-import { TPackageReference } from "../../../../fiscalOBligations/domain/contracts/IFiscalObligationsEventsPackage.js";
-import { TFiscalOBligationsEntryData } from "../../../../fiscalOBligations/domain/contracts/TFiscalOBligartionsEntryData.js";
-import { E_WORKER_PROCESS } from "../../../../fiscalOBligations/domain/names.js";
-import { parentPort, workerData } from "worker_threads"
+import { parentPort } from "worker_threads"
+import { IObjectToXmlConverter } from "../../../../../shared/domain/fiscalObligations/IObjectToXmlConverter.js";
+import { IObjectToXsdMapper } from "../../../../../shared/domain/fiscalObligations/IObjectToXsdMapper.js";
+import { IValidateXmlWithXsd } from "../../../../../shared/domain/fiscalObligations/IValidateXmlWithXsd.js";
+import { E_OBRIGACAO_CODIGO_LAYOUT, E_WORKER_PROCESS } from "../../../../../shared/domain/fiscalObligations/names.js";
+import { TPackageReference } from "../../../../../shared/domain/fiscalObligations/IFiscalObligationsEventsPackage.js";
+import { TFiscalOBligationsEntryData } from "../../../../../shared/domain/fiscalObligations/TFiscalOBligartionsEntryData.js";
 
 
 export type TPackageProcessResponse = {
@@ -17,93 +18,116 @@ export type TPackageProcessResponse = {
   }
 }
 
-export interface IFixJsonToSchemaXSD {
-  codLayout: string
-  handle(data: Record<string, any>): Promise<Record<string, any> | Error>
-}
-
-export interface IConvertObjectToXML {
-  handle(data: Record<string, any>): Promise<string | Error>
-}
-
-export interface IValidLayoutXSD {
-  handle(xmlString: string): Promise<boolean | Error>
-}
-
-export interface ISignXmlEvent {
-  handle(data: string): Promise<string>
-}
-
-export interface ICreateXMLPackage {
-  handle(data: Array<string>): Promise<string>
-}
-
-
 export class EfinanceiraProcesssPackageListener implements IParentPortWorkerThread<Array<TFiscalOBligationsEntryData>> {
-
   constructor(
-    private fixJsonToSchemaXSD: Array<IFixJsonToSchemaXSD>,
-    private convertObjectToXML: IConvertObjectToXML,
-    private validLayoutXSD: IValidLayoutXSD,
-    private signXmlEvent: ISignXmlEvent,
-    private createXMLPackage: ICreateXMLPackage,
+    private objectToXsdMapper: Array<IObjectToXsdMapper<TFiscalOBligationsEntryData>>,
+    private objectToXmlConverter: IObjectToXmlConverter,
+    private validateXmlWithXsd: IValidateXmlWithXsd<{layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string}>
   ){}
 
   public async handle(structData: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>): Promise<void> {
-    try {
-      const packageReference = structData.fiscalOBligationsEventsPackage!.packageReference
 
-      if (!this.isValidMessageToProcess(structData)) {
-        throw new Error("ParentPortWorkerThreadQueueProcesssPackage - Invalid message to process")
-      }
+    console.log('########################################################################################')
+    console.log('########################################################################################')
+    console.log('########################################################################################')
+    console.log('########################################################################################')
 
-      const messageToProcess = this.handleToBuildMessageToProcess(structData)
-      const totalEvents = messageToProcess.entryData!.length
-      const errors: Array<string> = new Array()
-      const xmls: Array<string> = new Array()
+    console.log("objectToXsdMapper", this.objectToXsdMapper)
+    console.log("objectToXmlConverter", this.objectToXmlConverter)
+    console.log("validateXmlWithXsd", this.validateXmlWithXsd)
 
-      const
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
+    this.validateXmlWithXsd.handle({} as {layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string})
 
-      for (const event of messageToProcess.entryData!) {
-        event.event.efinanceira!
-        event.event.efinanceira?.idGov
-        event.event.efinanceira?.evento
+    console.log('########################################################################################')
+    console.log('########################################################################################')
+    console.log('########################################################################################')
+    console.log('########################################################################################')
 
-        const objectAlreadyToConvert = this.handleToFixJsonToSchemaXSD(event)
-        if (Error.isError(objectAlreadyToConvert)) {
-          errors.push(event.event.efinanceira!.idGov)
-          continue
-        }
 
-        const xmlData = this.convertObjectToXML(objectAlreadyToConvert)
-        if (Error.isError(xmlData)) {
-          errors.push(event.event.efinanceira!.idGov)
-          continue
-        }
 
-        const isValidXml = this.handleToValidLayoutXSD(objectAlreadyToConvert)
-        if (!isValidXml) {
-          errors.push(event.event.efinanceira!.idGov)
-          continue
-        }
 
-        delete event.event.efinanceira?.evento
-        xmlData
+    // try {
+    //   const packageReference = structData.fiscalOBligationsEventsPackage!.packageReference
+    //   const [ _, layoutCode ] = packageReference.keyGroup.split("#")
 
-      }
+    //   if (!this.isValidMessageToProcess(structData)) {
+    //     throw new Error("ParentPortWorkerThreadQueueProcesssPackage - Invalid message to process")
+    //   }
 
-      parentPort!.postMessage({ identifier: 'success', success: packageReference })
-    } catch(error) {
-      parentPort!.postMessage({
-        identifier: 'error',
-        error: structData.fiscalOBligationsEventsPackage!.packageReference
-      })
-      console.log('[LOG][ERROR] - EfinanceiraProcesssPackageListener - handle - error: ', error)
-    }
+    //   const messageToProcess = this.handleToBuildMessageToProcess(structData)
+    //   const totalEvents = messageToProcess.entryData!.length
+    //   const errors: Array<string> = new Array()
+    //   const xmls: Array<string> = new Array()
+
+
+
+
+    //   for (const event of messageToProcess.entryData!) {
+    //     const objectInSchamaXsd = await this.handleObjectToXsdMapper(layoutCode as E_OBRIGACAO_CODIGO_LAYOUT, event)
+    //     if (Error.isError(objectInSchamaXsd)) {
+    //       errors.push(event.event.efinanceira!.idGov)
+    //       continue
+    //     }
+
+    //     // const xmlData = await this.objectToXmlConverter.handle(objectInSchamaXsd)
+    //     // if (Error.isError(xmlData)) {
+    //     //   errors.push(event.event.efinanceira!.idGov)
+    //     //   continue
+    //     // }
+
+    //     // const validateXmlWithXsdParams = {layoutCode, xmlData} as { layoutCode: E_OBRIGACAO_CODIGO_LAYOUT; xmlData: string}
+    //     // const isValidXml = await this.validateXmlWithXsd.handle(validateXmlWithXsdParams)
+    //     // if (!isValidXml) {
+    //     //   errors.push(event.event.efinanceira!.idGov)
+    //     //   continue
+    //     // }
+
+    //     // console.log("EfinanceiraProcesssPackageListener - handle - xmlData >>", xmlData)
+    //   }
+
+    //   parentPort!.postMessage({ identifier: 'success', success: packageReference })
+    // } catch(error) {
+    //   parentPort!.postMessage({
+    //     identifier: 'error',
+    //     error: structData.fiscalOBligationsEventsPackage!.packageReference
+    //   })
+    //   console.log('[LOG][ERROR] - EfinanceiraProcesssPackageListener - handle - error: ', error)
+    // }
   }
 
   private isValidMessageToProcess(structData: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>): boolean {
     return structData.identifier === E_WORKER_PROCESS.FISCAL_OBLIGARTIONS_EVENTS_PACKAGE
+  }
+
+  private async handleObjectToXsdMapper(layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, event: TFiscalOBligationsEntryData): Promise<Record<string, any> | Error> {
+
+    console.log("=================================================================")
+    console.log("=================================================================")
+    console.log("=================================================================")
+
+    console.log("this.objectToXsdMapper: ", this.objectToXsdMapper)
+    console.log("layoutCode: ", layoutCode)
+    console.log("event: ", event)
+
+    console.log("=================================================================")
+    console.log("=================================================================")
+    console.log("=================================================================")
+
+    return {}
+    // for(const mapper of this.objectToXsdMapper) {
+    //   if(mapper.layoutCode === layoutCode) return await mapper.handle(event)
+    // }
+    // throw new Error("Error - EfinanceiraProcesssPackageListener - handleToFixJsonToSchemaXSD")
   }
 
   private handleToBuildMessageToProcess(structData: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>): TPostMessageStrucData<Array<TFiscalOBligationsEntryData>> {

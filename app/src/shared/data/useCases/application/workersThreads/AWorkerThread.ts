@@ -5,8 +5,6 @@ import { IWorkerThreadSucessEventHandler } from "../../../interfaces/application
 import { TPostMessageStrucData } from "../../../interfaces/application/workers/IParentPortWorkerThread.js"
 import { IWorkerThread, E_WORKER_STATE } from "../../../interfaces/application/workers/IWorkerThread.js"
 
-
-
 export abstract class AWorkerThread<TEntryData> implements IWorkerThread<TEntryData> {
   private _id!: number
   private _name!: string

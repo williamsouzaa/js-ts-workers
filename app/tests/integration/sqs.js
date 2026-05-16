@@ -3,6 +3,7 @@ import { CreateQueueCommand, SendMessageCommand, SQSClient } from "@aws-sdk/clie
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { gerarEvtMovOpFin } from './efn_generator.js'
+import { fakerPT_BR } from '@faker-js/faker'
 
 export const sqsLocalClient = new SQSClient({
   region: "us-east-1",
@@ -12,6 +13,7 @@ export const sqsLocalClient = new SQSClient({
     secretAccessKey: "test",
   },
 });
+
 
 export const QUEUE_URL = "http://192.10.1.6:4566/000000000000/fila-de-processamento";
 
@@ -47,18 +49,14 @@ async function iniciarProdutor() {
       const hoje = new Date();
 
       for (let i = 0; i < quantidade; i++) {
-        // --- A MÁGICA ACONTECE AQUI ---
-        // Construindo o payload exatamente como o SQSController.buildBusinessRule espera:
+        const seq = fakerPT_BR.number.int({ min: 1, max: 999999999 });
         const payload = {
-          id: `EVT-${Date.now()}-${i}`,
+          id: `ID${String(seq).padStart(13, '0')}`,
           obrigacao: 'efinanceira',
-          codLayout: '003', // O controller mapeia body.codLayout para codigoLayout
+          codLayout: '003',
           ano: hoje.getFullYear(),
-          // mes: Math.floor(Math.random() * 12) + 1,
-          mes: 5,
+          mes: Math.floor(Math.random() * 12) + 1,
           cnpjEmpresa: '12345678000199', // CNPJ Fake de teste
-          // O controller mapeia body.evento para jsonStr.
-          // Geralmente aqui vai um JSON em string com os dados brutos da obrigação.
           evento: JSON.stringify(gerarEvtMovOpFin())
         };
 
@@ -69,9 +67,7 @@ async function iniciarProdutor() {
 
         promessasDeEnvio.push(envio);
       }
-
       await Promise.all(promessasDeEnvio);
-
       console.log(`[LOG][SUCESSO] ${quantidade} eventos gerados e enviados com sucesso!\n`);
     }
 

@@ -1,5 +1,43 @@
-const x = new Map()
-x.set('EVT-1778334286900-0','{"from":{"identifider":"sqs","sqs":{"messageId":"896efb83-8e5c-4143-81eb-49a37aa62ac3","receiptId":"NThhN2FjZGYtZjYwZC00NjRkLTk0OWQtYWZhODEzMWE1NDU0IGFybjphd3M6c3FzOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6ZmlsYS1kZS1wcm9jZXNzYW1lbnRvIDg5NmVmYjgzLThlNWMtNDE0My04MWViLTQ5YTM3YWE2MmFjMyAxNzc4MzM0NDI4Ljg0NzY0NQ=="}},"event":{"obrigacao":"efinanceira","efinanceira":{"cnpjEmpresa":"12345678000199","ano":2026,"mes":11,"anoMes":202611,"codLayout":"003","evento":{"id":"EVT-1778334286900-0"}}}}')
-x.set('EVT-1778334286901-5','{"from":{"identifider":"sqs","sqs":{"messageId":"2486f867-b39b-4aa3-8d3c-3816141bee12","receiptId":"ZTY5OTYzYWQtZWI4ZC00ODA4LWFkOTEtMjlmYjBhOWZiMDlhIGFybjphd3M6c3FzOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6ZmlsYS1kZS1wcm9jZXNzYW1lbnRvIDI0ODZmODY3LWIzOWItNGFhMy04ZDNjLTM4MTYxNDFiZWUxMiAxNzc4MzM0NDI4Ljg0Nzg4OTQ="}},"event":{"obrigacao":"efinanceira","efinanceira":{"cnpjEmpresa":"12345678000199","ano":2026,"mes":11,"anoMes":202611,"codLayout":"003","evento":{"id":"EVT-1778334286901-5"}}}}')
+import { Worker, isMainThread, parentPort } from 'worker_threads';
+import libxml from 'libxmljs2';
 
-console.log(x.map((_, el) => el))
+
+
+if (isMainThread) {
+  console.log('==================================================');
+  console.log('[MAIN] Iniciando o teste da libxmljs2 em Workers...');
+  console.log('==================================================\n');
+
+  // Cria um Worker apontando para este próprio arquivo
+  const worker = new Worker('./test.js');
+
+  worker.on('message', (msg) => {
+    console.log('[MAIN] Mensagem recebida do Worker:', msg);
+  });
+
+  worker.on('error', (err) => {
+    console.error('\n❌ TESTE FALHOU: A libxmljs2 NÃO suporta Worker Threads nativamente.');
+    console.error('Motivo do Crash:', err.message);
+    console.error('\n=> Conclusão: Você precisará usar o padrão Maestro (child_process.fork) em vez de worker_threads.');
+  });
+
+  worker.on('exit', (code) => {
+    if (code === 0) {
+      console.log('\n✅ TESTE PASSOU: A libxmljs2 suporta Worker Threads perfeitamente!');
+    }
+  });
+
+} else {
+  // --- DAQUI PARA BAIXO RODA DENTRO DO WORKER ---
+  console.log('[WORKER] Thread isolada iniciada com sucesso.');
+  console.log('[WORKER] Tentando importar a libxmljs2 (o erro costuma acontecer aqui)...');
+
+  // Se a biblioteca não suportar, ela vai explodir exatamente nesta linha:
+
+  console.log('[WORKER] libxmljs2 importada! Testando o motor em C++...');
+  const xml = '<?xml version="1.0" encoding="UTF-8"?><teste>Sucesso!</teste>';
+  const doc = libxml.parseXml(xml);
+
+  // Se chegou aqui, funcionou perfeitamente
+  parentPort.postMessage(`Parse concluído: Tag raiz é <${doc.root().name()}>`);
+}

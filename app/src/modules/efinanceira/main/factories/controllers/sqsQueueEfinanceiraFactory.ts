@@ -5,14 +5,14 @@ import { SQSClientAdapter } from "../../../../../shared/infra/adapters/aws/sqs/S
 import { SQSController } from "../../../../../shared/presentation/controllers/aws/sqs/SQSController.js"
 import { IQueueController } from "../../../../../shared/presentation/interfaces/queue/IQueueController.js"
 import { sleep } from "../../../../../utils/sleep.js"
-import { BuildEntryDataFromSQSMessage } from "../../../../fiscalOBligations/data/useCases/entryData/BuildEntryDataFromSQSMessage.js"
-import { FiscalOBligationsOrchestrator } from "../../../../fiscalOBligations/data/useCases/FiscalObligartionsOrchestrator.js"
-import { WorkerThreadSucessEventHandlerfiscalOBligations } from "../../../../fiscalOBligations/data/useCases/workers/listeners/WorkerThreadSucessEventHandlerFiscalOBligartions.js"
-import { WorkerThreadFiscalOBligations } from "../../../../fiscalOBligations/data/useCases/workers/WorkerThreadFiscalOBligartions.js"
-import { WorkerThreadPoolFiscalOBligations } from "../../../../fiscalOBligations/data/useCases/workers/WorkerThreadPoolFiscalOBligartions.js"
-import { RedisfiscalOBligationsPackageRepositoryAdapter } from "../../../../fiscalOBligations/infra/databases/repositories/redis/RedisFiscalOBligartionsPackageRepositoryAdapter.js"
-import { IFiscalObligationsEventsPackage } from "../../../../fiscalOBligations/domain/contracts/IFiscalObligationsEventsPackage.js"
-import { FiscalOBligationsEventsPackage } from "../../../../fiscalOBligations/data/useCases/eventsPackages/FiscalOBligartionsEventsPackage.js"
+import { BuildEntryDataFromSQSMessage } from "../../../../../shared/data/useCases/fiscalObligations/entryData/BuildEntryDataFromSQSMessage.js"
+import { FiscalOBligationsEventsPackage } from "../../../../../shared/data/useCases/fiscalObligations/eventsPackages/FiscalOBligartionsEventsPackage.js"
+import { FiscalOBligationsOrchestrator } from "../../../../../shared/data/useCases/fiscalObligations/FiscalObligartionsOrchestrator.js"
+import { WorkerThreadSucessEventHandlerfiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/listeners/WorkerThreadSucessEventHandlerFiscalOBligartions.js"
+import { WorkerThreadFiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/WorkerThreadFiscalOBligartions.js"
+import { WorkerThreadPoolFiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/WorkerThreadPoolFiscalOBligartions.js"
+import { IFiscalObligationsEventsPackage } from "../../../../../shared/domain/fiscalObligations/IFiscalObligationsEventsPackage.js"
+import { RedisfiscalOBligationsPackageRepositoryAdapter } from "../../../../../shared/infra/databases/repositories/redis/RedisFiscalOBligartionsPackageRepositoryAdapter.js"
 
 function getfiscalOBligationsEventsPackageFactory(): IFiscalObligationsEventsPackage {
   const fiscalOBligationsEventsPackage = new FiscalOBligationsEventsPackage()
@@ -45,7 +45,7 @@ export async function sqsQueueEfinanceiraFactory(): Promise<IQueueController> {
       new WorkerThreadExitEventHandler(),
   ))
 
-  await workerThreadManager.init("./dist/src/modules/fiscalOBligations/data/useCases/workers/listeners/WorkerListenerToProcessFiscalOBligartions.js", 4)
+  await workerThreadManager.init("./dist/src/shared/data/useCases/fiscalObligations/workers/listeners/WorkerListenerToProcessFiscalOBligartions.js", 4)
   await sleep(5000)
   console.log('[LOG][INFO] - sqsQueueEfinanceiraFactory - workerThreadManager:', workerThreadManager)
 

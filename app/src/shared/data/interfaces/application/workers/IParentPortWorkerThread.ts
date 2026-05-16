@@ -1,6 +1,5 @@
-import { TPackageReference } from "../../../../../modules/fiscalOBligations/domain/contracts/IFiscalObligationsEventsPackage.js"
-import { E_WORKER_PROCESS } from "../../../../../modules/fiscalOBligations/domain/names.js"
-
+import { TPackageReference } from "../../../../domain/fiscalObligations/IFiscalObligationsEventsPackage.js"
+import { E_WORKER_PROCESS } from "../../../../domain/fiscalObligations/names.js"
 
 
 

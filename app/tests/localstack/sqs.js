@@ -48,8 +48,10 @@ async function iniciarProdutor() {
       for (let i = 0; i < quantidade; i++) {
         // --- A MÁGICA ACONTECE AQUI ---
         // Construindo o payload exatamente como o SQSController.buildBusinessRule espera:
+
+        const seq = faker.number.int({ min: 1, max: 999999999 });
         const payload = {
-          id: `EVT-${Date.now()}-${i}`,
+          id: `ID${String(seq).padStart(13, '0')}`,
           obrigacao: 'efinanceira',
           codLayout: '003', // O controller mapeia body.codLayout para codigoLayout
           ano: hoje.getFullYear(),

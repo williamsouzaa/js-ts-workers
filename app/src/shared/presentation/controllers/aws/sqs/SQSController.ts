@@ -1,9 +1,10 @@
-import { FiscalOBligationsOrchestrator } from "../../../../../modules/fiscalOBligations/data/useCases/FiscalObligartionsOrchestrator.js";
-import { TFiscalOBligationsEntryData } from "../../../../../modules/fiscalOBligations/domain/contracts/TFiscalOBligartionsEntryData.js";
+
+
 import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IGetBatchMessagesInQueue.js";
 import { TQueueMessage } from "../../../../data/interfaces/application/queue/TQueueMessage.js";
-import { IBuildEntryData } from "../../../../domain/buildEntryData/IBuildEntryData.js";
-
+import { FiscalOBligationsOrchestrator } from "../../../../data/useCases/fiscalObligations/FiscalObligartionsOrchestrator.js";
+import { TFiscalOBligationsEntryData } from "../../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js";
+import { IBuildEntryData } from "../../../../domain/IBuildEntryData.js";
 import { IQueueController, EQueueController } from "../../../interfaces/queue/IQueueController.js";
 
 export class SQSController implements IQueueController {
