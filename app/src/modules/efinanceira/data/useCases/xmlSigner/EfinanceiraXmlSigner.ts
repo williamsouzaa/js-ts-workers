@@ -1,19 +1,17 @@
 import { SignedXml } from 'xml-crypto';
-import * as fs from 'fs';
-import * as path from 'path';
 import { IXmlSigner } from '../../../../../shared/domain/fiscalObligations/IXmlSigner.js';
+import { EFINANCEIRA } from '../../../../../environment.js';
+import { handleReadFileSync } from '../../../../../utils/handleReadFileSync.js';
 
 export class EfinanceiraXmlSigner implements IXmlSigner<{xmlData: string, idGov: string}> {
   private readonly privateKey: string;
   private readonly publicCertClean: string;
 
   constructor() {
-    const certificateBasePath = path.resolve(process.cwd(), 'app/src/modules/efinanceira/infra/storage/certificates')
-    this.privateKey = fs.readFileSync(path.join(certificateBasePath, 'chave_privada.pem'), 'utf8');
-    const publicCertRaw = fs.readFileSync(path.join(certificateBasePath, 'certificado_publico.pem'), 'utf8');
+    this.privateKey = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_COMPANYS + '/generic' as `app/${string}`, 'chave_privada.pem')
+    const publicCert = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_COMPANYS + '/generic' as `app/${string}`, 'certificado_publico.pem')
 
-    // Limpeza obrigatória para o padrão X509 da Receita Federal
-    this.publicCertClean = publicCertRaw
+    this.publicCertClean = publicCert
       .replace(/-----BEGIN CERTIFICATE-----/g, '')
       .replace(/-----END CERTIFICATE-----/g, '')
       .replace(/\r?\n|\r/g, '');

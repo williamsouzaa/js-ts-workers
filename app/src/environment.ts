@@ -13,3 +13,13 @@ export const REDIS = {
   PORT: parseInt(process.env.DATABASE_REDIS_PORT as string, 10) || isRequired('DATABASE_REDIS_PORT'),
 }
 
+export const EFINANCEIRA = {
+  CERT_THUMBPRINT : NODE_ENV === 'PROD' ? "33ff3179bda29a7e25daa52631defc19d1105b2d" : "cc242988a739caa7757b29e2a900ae35519cdb39",
+
+  BASE_PATH_LAYOUTS_XSD   : 'app/src/modules/efinanceira/infra/storage/XSDs/layouts' as `app/${string}`,
+
+  BASE_PATH_CERT_GOV : 'app/src/modules/efinanceira/infra/storage/certificates/gov' as `app/${string}`,
+  CERT_GOV_FILE_NAME:  NODE_ENV === 'PROD' ? "efinanceira-producao.pem" : "efinanceira-homologacao.pem",
+
+  BASE_PATH_CERT_COMPANYS : 'app/src/modules/efinanceira/infra/storage/certificates/company' as `app/${string}`,
+}

@@ -1,8 +1,8 @@
-import fs from 'fs'
-import path from 'path'
 import libxmljs, {Document} from 'libxmljs2'
 import { IValidateXmlWithXsd } from '../../../../../shared/domain/fiscalObligations/IValidateXmlWithXsd.js'
 import { E_OBRIGACAO_CODIGO_LAYOUT } from '../../../../../shared/domain/fiscalObligations/names.js'
+import { handleReadFileSync } from '../../../../../utils/handleReadFileSync.js'
+import { EFINANCEIRA } from '../../../../../environment.js'
 
 
 export class LibxmljsEfinanceiraValidateXmlWithXsdAdapter implements IValidateXmlWithXsd<{layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string}> {
@@ -10,15 +10,8 @@ export class LibxmljsEfinanceiraValidateXmlWithXsdAdapter implements IValidateXm
   private evtAberturaeFinanceiraXsd!: Document
 
   constructor() {
-    this.setAllLayoutsXSD()
-  }
-
-  public setAllLayoutsXSD(): void {
-    const projectRoot = process.cwd();
-    const xsdsBasePath = path.resolve(projectRoot, 'app/src/modules/efinanceira/infra/storage/XSDs/layouts')
-
-    this.evtMovOpFinXsd = libxmljs.parseXml(fs.readFileSync(path.join(xsdsBasePath, 'evtMovOpFin.xsd'), 'utf8'))
-    this.evtAberturaeFinanceiraXsd = libxmljs.parseXml(fs.readFileSync(path.join(xsdsBasePath, 'evtAberturaeFinanceira.xsd'), 'utf8'))
+    this.evtMovOpFinXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtMovOpFin.xsd'))
+    this.evtAberturaeFinanceiraXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtAberturaeFinanceira.xsd'))
   }
 
   public async handle(data: { layoutCode: E_OBRIGACAO_CODIGO_LAYOUT; xmlData: string; }): Promise<boolean> {

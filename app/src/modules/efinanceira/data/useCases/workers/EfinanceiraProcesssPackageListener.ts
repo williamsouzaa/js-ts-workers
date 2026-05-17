@@ -7,7 +7,8 @@ import { TPackageReference } from "../../../../../shared/domain/fiscalObligation
 import { TEventEfinanceira, TFiscalOBligationsEntryData } from "../../../../../shared/domain/fiscalObligations/TFiscalOBligartionsEntryData.js";
 import { IParentPortWorker, TPostMessageStrucData } from "../../../../../shared/data/interfaces/application/workers/IParentPortWorker.js";
 import { IXmlSigner } from "../../../../../shared/domain/fiscalObligations/IXmlSigner.js";
-
+import { ICreateBatchEvents } from "../../../../../shared/domain/fiscalObligations/ICreateBatchEvents.js";
+import fs from 'fs'
 
 export type TPackageProcessResponse = {
   success?: TPackageReference
@@ -22,7 +23,8 @@ export class EfinanceiraProcesssPackageListener implements IParentPortWorker<Arr
     private objectToXsdMapper: Array<IObjectToXsdMapper<TEventEfinanceira>>,
     private objectToXmlConverter: IObjectToXmlConverter,
     private validateXmlWithXsd: IValidateXmlWithXsd<{layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string}>,
-    private xmlSigner: IXmlSigner<{xmlData: string, idGov: string}>
+    private xmlSigner: IXmlSigner<{xmlData: string, idGov: string}>,
+    private createBatchXml: ICreateBatchEvents<Array<{idGov: string, xmlSigned: string}>>
   ){}
 
   public async handle(structData: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>): Promise<void> {
@@ -39,7 +41,7 @@ export class EfinanceiraProcesssPackageListener implements IParentPortWorker<Arr
       const [ _, layoutCode ] = structData.fiscalOBligationsEventsPackage!.packageReference.keyGroup.split("#")
       const dataToProcess = this.handleToBuilDataToProcess(structData)
       const errors: Array<string> = new Array()
-      const signedXmls: Array<{idGov: string, signedXml: string}> = new Array()
+      const signedXmls: Array<{idGov: string, xmlSigned: string}> = new Array()
 
       for (const event of dataToProcess.entryData!) {
         try {
@@ -52,12 +54,15 @@ export class EfinanceiraProcesssPackageListener implements IParentPortWorker<Arr
           }
           signedXmls.push({
             idGov: event.event.efinanceira!.idGov,
-            signedXml: await this.xmlSigner.handle({xmlData, idGov: event.event.efinanceira!.idGov})
+            xmlSigned: await this.xmlSigner.handle({xmlData, idGov: event.event.efinanceira!.idGov})
           })
         } catch(error) {
           errors.push(event.event.efinanceira!.idGov)
         }
       }
+
+      const batchXmlEvents = await this.createBatchXml.handle(signedXmls)
+      fs.appendFileSync(`./output_${structData.worker?.id}.txt`, batchXmlEvents);
 
       process.send!({ identifier: 'success', success: structData.fiscalOBligationsEventsPackage!.packageReference })
   }
