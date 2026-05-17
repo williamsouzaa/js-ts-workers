@@ -1,15 +1,17 @@
-import { IParentPortWorkerThread, TPostMessageStrucData } from "../../../../../../shared/data/interfaces/application/workers/IParentPortWorkerThread.js"
-import { IWorkerThreadListener } from "../../../../../../shared/data/interfaces/application/workers/IWorkerThreadListener.js"
+
+import { IWorkerListener } from "../../../../../../shared/data/interfaces/application/workers/IWorkerListener.js"
 import { RedisClient } from "../../../../../../shared/infra/databases/connections/redis/RedisConnect.js"
 import { EfinanceiraProcesssPackageListener } from "../../../../../../modules/efinanceira/data/useCases/workers/EfinanceiraProcesssPackageListener.js"
 import { E_WORKER_PROCESS } from "../../../../../domain/fiscalObligations/names.js"
 import { TFiscalOBligationsEntryData } from "../../../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js"
 import { ObjectToXsdMapperEfinanceiraAbertura } from "../../../../../../modules/efinanceira/data/useCases/objectToXsdMapper/ObjectToXsdMapperEfinanceiraAbertura.js"
 import { ObjectToXsdMapperEfinanceiraMovFin } from "../../../../../../modules/efinanceira/data/useCases/objectToXsdMapper/ObjectToXsdMapperEfinanceiraMovFin.js"
-import { EfinanceiraValidateXmlWithXsdLibxmljsAdapter } from "../../../../../../modules/efinanceira/infra/libs/libxmljs/EfinanceiraValidateXmlWithXsdLibxmljsAdapter.js"
+import { LibxmljsEfinanceiraValidateXmlWithXsdAdapter } from "../../../../../../modules/efinanceira/infra/libs/libxmljs/LibxmljsEfinanceiraValidateXmlWithXsdAdapter.js"
 import { Xmlbuilder2EfinanceiraObjectToXmlConverterAdapter } from "../../../../../../modules/efinanceira/infra/libs/xmlbuilder2/Xmlbuilder2EfinanceiraObjectToXmlConverterAdapter.js"
 
 import libxmljs from 'libxmljs2';
+import { IParentPortWorker, TPostMessageStrucData } from "../../../../interfaces/application/workers/IParentPortWorker.js"
+import { EfinanceiraXmlSigner } from "../../../../../../modules/efinanceira/data/useCases/xmlSigner/EfinanceiraXmlSigner.js"
 
 // child_process: identity comes from env vars set by the parent via fork()
 const workerData = {
@@ -17,12 +19,9 @@ const workerData = {
   workerId: parseInt(process.env.WORKER_ID ?? '0', 10)
 }
 
-class WorkerListenerToProcessFiscalOBligartions implements IWorkerThreadListener {
+class WorkerListenerToProcessFiscalOBligartions implements IWorkerListener {
   public async handle() {
     await this.databases()
-
-    const efinanceiraValidateXmlWithXsdAdapter = new EfinanceiraValidateXmlWithXsdLibxmljsAdapter()
-    efinanceiraValidateXmlWithXsdAdapter.setAllLayoutsXSD()
 
     this.listen(
       new EfinanceiraProcesssPackageListener(
@@ -31,15 +30,16 @@ class WorkerListenerToProcessFiscalOBligartions implements IWorkerThreadListener
           new ObjectToXsdMapperEfinanceiraMovFin(),
         ],
         new Xmlbuilder2EfinanceiraObjectToXmlConverterAdapter(),
-        efinanceiraValidateXmlWithXsdAdapter
+        new LibxmljsEfinanceiraValidateXmlWithXsdAdapter(),
+        new EfinanceiraXmlSigner()
       )
     )
   }
 
-  private listen(listener: IParentPortWorkerThread<Array<TFiscalOBligationsEntryData>>): void {
+  private listen(listener: IParentPortWorker<Array<TFiscalOBligationsEntryData>>): void {
     // child_process: use process.on('message') instead of parentPort.on('message')
     process.on('message', async (message: TPostMessageStrucData<Array<TFiscalOBligationsEntryData>>) => {
-      // Decode base64-encoded binary data sent by the parent (AWorkerThread)
+      // Decode base64-encoded binary data sent by the parent (AWorker)
       const decodedMessage = this.decodeBinaryData(message)
       process.send!(this.receivedMessage(decodedMessage))
       await listener.handle(decodedMessage)

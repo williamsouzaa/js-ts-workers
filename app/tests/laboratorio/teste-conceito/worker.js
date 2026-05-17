@@ -22,11 +22,11 @@ function errorResponse() {
     }
 }
 
-class WorkerThreadManager {
+class WorkerManager {
   async handle(message, messageEncoded) {
     const decoder = new TextDecoder('utf-8');
     const data = decoder.decode(messageEncoded);
-    console.log(`[LOG][INFO] - WorkerThreadManager - handle - data:`, data);
+    console.log(`[LOG][INFO] - WorkerManager - handle - data:`, data);
     // ADICIONAR TODOS OS PASSOS DO PROCESSAMENTO AQUI...
     // logicaPesadaAqui()
     await sleep(200);
@@ -37,7 +37,7 @@ class WorkerThreadManager {
 
 parentPort.on('message', async (message) => {
   try {
-    const workerThreadManager = new WorkerThreadManager();
+    const workerThreadManager = new WorkerManager();
     const result = await workerThreadManager.handle(message, message.data);
     const encoder = new TextEncoder();
     const uint8Array = encoder.encode(result);

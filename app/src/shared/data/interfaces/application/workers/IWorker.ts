@@ -1,5 +1,5 @@
 import { ChildProcess } from 'child_process';
-import { TPostMessageStrucData } from "./IParentPortWorkerThread.js";
+import { TPostMessageStrucData } from "./IParentPortWorker.js";
 
 export enum E_WORKER_STATE {
   BUSY = 'BUSY',
@@ -8,7 +8,7 @@ export enum E_WORKER_STATE {
 }
 
 
-export interface IWorkerThread<TEntryData> {
+export interface IWorker<TEntryData> {
   readonly id: number
   readonly name: string
   readonly state: E_WORKER_STATE

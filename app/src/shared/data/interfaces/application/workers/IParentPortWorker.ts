@@ -14,6 +14,6 @@ export type TPostMessageStrucData<TEntryData> = {
   entryData?: TEntryData
 }
 
-export interface IParentPortWorkerThread<TEntryData> {
+export interface IParentPortWorker<TEntryData> {
   handle(structData: TPostMessageStrucData<TEntryData>): Promise<void>
 }

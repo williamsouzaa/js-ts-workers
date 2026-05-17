@@ -1,11 +1,11 @@
 import { fork, ChildProcess } from 'child_process';
-import { IWorkerThreadErrorEventHandler } from "../../../interfaces/application/workers/events/IWorkerThreadErrorEventHandler.js"
-import { IWorkerThreadExitEventHandler } from "../../../interfaces/application/workers/events/IWorkerThreadExitEventHandler.js"
-import { IWorkerThreadSucessEventHandler } from "../../../interfaces/application/workers/events/IWorkerThreadSucessEventHandler.js"
-import { TPostMessageStrucData } from "../../../interfaces/application/workers/IParentPortWorkerThread.js"
-import { IWorkerThread, E_WORKER_STATE } from "../../../interfaces/application/workers/IWorkerThread.js"
+import { IWorkerErrorEventHandler } from "../../../interfaces/application/workers/events/IWorkerErrorEventHandler.js"
+import { IWorkerExitEventHandler } from "../../../interfaces/application/workers/events/IWorkerExitEventHandler.js"
+import { IWorkerSucessEventHandler } from "../../../interfaces/application/workers/events/IWorkerSucessEventHandler.js"
+import { IWorker, E_WORKER_STATE } from "../../../interfaces/application/workers/IWorker.js"
+import { TPostMessageStrucData } from '../../../interfaces/application/workers/IParentPortWorker.js';
 
-export abstract class AWorkerThread<TEntryData> implements IWorkerThread<TEntryData> {
+export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
   private _id!: number
   private _name!: string
   private _state!: E_WORKER_STATE
@@ -20,9 +20,9 @@ export abstract class AWorkerThread<TEntryData> implements IWorkerThread<TEntryD
   public get currentLoad(): number { return this._currentLoad }
 
   constructor(
-    private sucessEventHandler: IWorkerThreadSucessEventHandler<TEntryData>,
-    private errorEventHandler: IWorkerThreadErrorEventHandler,
-    private exitEventHandler: IWorkerThreadExitEventHandler
+    private sucessEventHandler: IWorkerSucessEventHandler<TEntryData>,
+    private errorEventHandler: IWorkerErrorEventHandler,
+    private exitEventHandler: IWorkerExitEventHandler
   ) {}
 
   public async handle(id: number, name: string, pathWorkerFile: string): Promise<void> {
@@ -47,8 +47,6 @@ export abstract class AWorkerThread<TEntryData> implements IWorkerThread<TEntryD
   public workerIsIdle(): boolean    { return this._state === E_WORKER_STATE.IDLE }
 
   public async postMessage(structData: TPostMessageStrucData<TEntryData>, bufferData: any): Promise<void> {
-    console.log("CHECKPOINT >> postMessage", structData, bufferData)
-
     if (this._state !== E_WORKER_STATE.IDLE) return
 
     Array.isArray(bufferData)
@@ -92,7 +90,7 @@ export abstract class AWorkerThread<TEntryData> implements IWorkerThread<TEntryD
   }
 
   private subtractOneFromTheCurrentLoad(): void {
-    this._currentLoad -= 1
+    if (this._currentLoad != 0) this._currentLoad -= 1
     this.handleStateWorker()
   }
 

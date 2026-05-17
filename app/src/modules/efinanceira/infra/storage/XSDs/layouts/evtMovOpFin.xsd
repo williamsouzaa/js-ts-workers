@@ -1,6 +1,6 @@
 <xs:schema xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  xmlns="http://www.eFinanceira.gov.br/schemas/evtMovOpFin/v1_2_1"
-  targetNamespace="http://www.eFinanceira.gov.br/schemas/evtMovOpFin/v1_2_1"
+  xmlns="http://www.eFinanceira.gov.br/schemas/evtMovOpFin/v1_3_0"
+  targetNamespace="http://www.eFinanceira.gov.br/schemas/evtMovOpFin/v1_3_0"
   elementFormDefault="qualified" attributeFormDefault="unqualified">
   <xs:element name="eFinanceira">
     <xs:complexType>
@@ -20,11 +20,14 @@
                     <xs:element name="indRetificacao" minOccurs="1" maxOccurs="1">
                       <xs:simpleType>
                         <xs:annotation>
-                          <xs:documentation> Indicativo de Retificação: 1 - Original 2 - Retificador
-                            3 - Retificador a Pedido </xs:documentation>
+                          <xs:documentation> Indicativo de Retificação: 1 - para arquivo original 2
+                            - para arquivo de retificação espontânea 3 - para arquivo de retificação
+                            a pedido </xs:documentation>
                         </xs:annotation>
-                        <xs:restriction base="xs:unsignedInt">
-                          <xs:pattern value="[1|2|3]" />
+                        <xs:restriction base="xs:unsignedByte">
+                          <xs:enumeration value="1" />
+                          <xs:enumeration value="2" />
+                          <xs:enumeration value="3" />
                         </xs:restriction>
                       </xs:simpleType>
                     </xs:element>
@@ -44,21 +47,24 @@
                     <xs:element name="tpAmb" minOccurs="1" maxOccurs="1">
                       <xs:simpleType>
                         <xs:annotation>
-                          <xs:documentation> Identificação do ambiente: 1 - Produção 2 - Homologação </xs:documentation>
+                          <xs:documentation> Identificação do ambiente: 1 - produção; 2 -
+                            homologação. </xs:documentation>
                         </xs:annotation>
-                        <xs:restriction base="xs:unsignedInt">
-                          <xs:pattern value="[1|2]" />
+                        <xs:restriction base="xs:unsignedByte">
+                          <xs:enumeration value="1" />
+                          <xs:enumeration value="2" />
                         </xs:restriction>
                       </xs:simpleType>
                     </xs:element>
                     <xs:element name="aplicEmi" minOccurs="1" maxOccurs="1">
                       <xs:simpleType>
                         <xs:annotation>
-                          <xs:documentation> Processo de emissão do evento: 1- Emissão com
-                            aplicativo da empresa 2- Outros </xs:documentation>
+                          <xs:documentation> Processo de emissão do evento: 1 - emissão com
+                            aplicativo da empresa; 2 - outros. </xs:documentation>
                         </xs:annotation>
-                        <xs:restriction base="xs:unsignedInt">
-                          <xs:pattern value="[1|2]" />
+                        <xs:restriction base="xs:unsignedByte">
+                          <xs:enumeration value="1" />
+                          <xs:enumeration value="2" />
                         </xs:restriction>
                       </xs:simpleType>
                     </xs:element>
@@ -77,10 +83,10 @@
                 </xs:complexType>
               </xs:element>
               <xs:element name="ideDeclarante" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>Informações de identificação da Entidade Declarante</xs:documentation>
+                </xs:annotation>
                 <xs:complexType>
-                  <xs:annotation>
-                    <xs:documentation>Informações de identificação da Entidade Declarante</xs:documentation>
-                  </xs:annotation>
                   <xs:sequence>
                     <xs:element name="cnpjDeclarante" minOccurs="1" maxOccurs="1">
                       <xs:annotation>
@@ -88,7 +94,7 @@
                       </xs:annotation>
                       <xs:simpleType>
                         <xs:restriction base="xs:string">
-                          <xs:minLength value="1" />
+                          <xs:minLength value="8" />
                           <xs:maxLength value="14" />
                         </xs:restriction>
                       </xs:simpleType>
@@ -97,10 +103,10 @@
                 </xs:complexType>
               </xs:element>
               <xs:element name="ideDeclarado" minOccurs="1" maxOccurs="1">
+                <xs:annotation>
+                  <xs:documentation>Identificação do declarado</xs:documentation>
+                </xs:annotation>
                 <xs:complexType>
-                  <xs:annotation>
-                    <xs:documentation>Identificação do declarado</xs:documentation>
-                  </xs:annotation>
                   <xs:sequence>
                     <xs:element name="tpNI" minOccurs="1" maxOccurs="1">
                       <xs:annotation>
@@ -121,9 +127,21 @@
                         </xs:restriction>
                       </xs:simpleType>
                     </xs:element>
+                    <xs:element name="tpPartSocietaria" minOccurs="0" maxOccurs="unbounded">
+                      <xs:annotation>
+                        <xs:documentation>Tipo de Participação Societária para fins de intercâmbio
+                          de informações</xs:documentation>
+                      </xs:annotation>
+                      <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                          <xs:minLength value="1" />
+                          <xs:maxLength value="8" />
+                        </xs:restriction>
+                      </xs:simpleType>
+                    </xs:element>
                     <xs:element name="NIDeclarado" minOccurs="1" maxOccurs="1">
                       <xs:annotation>
-                        <xs:documentation>NI</xs:documentation>
+                        <xs:documentation>Número de Identificação (NI) do declarado</xs:documentation>
                       </xs:annotation>
                       <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -171,8 +189,32 @@
                               </xs:restriction>
                             </xs:simpleType>
                           </xs:element>
+                          <xs:element name="motivoNoTINReasonB" minOccurs="0" maxOccurs="1">
+                            <xs:annotation>
+                              <xs:documentation>Informar o motivo da não existência do NIF</xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                              <xs:restriction base="xs:string">
+                                <xs:minLength value="1" />
+                                <xs:maxLength value="200" />
+                              </xs:restriction>
+                            </xs:simpleType>
+                          </xs:element>
                         </xs:sequence>
                       </xs:complexType>
+                    </xs:element>
+                    <xs:element name="inDeclaracaoPropriaCRS" minOccurs="1" maxOccurs="1">
+                      <xs:annotation>
+                        <xs:documentation> Indicador se o declarado possui a declaração própria
+                          (auto declaração): CRS901 - tem declaração própria; CRS902 - não tem
+                          declaração própria. </xs:documentation>
+                      </xs:annotation>
+                      <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                          <xs:enumeration value="CRS901" />
+                          <xs:enumeration value="CRS902" />
+                        </xs:restriction>
+                      </xs:simpleType>
                     </xs:element>
                     <xs:element name="NomeDeclarado" minOccurs="1" maxOccurs="1">
                       <xs:annotation>
@@ -487,7 +529,11 @@
                             </xs:annotation>
                             <xs:complexType>
                               <xs:choice>
-                                <xs:element name="Pais" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                  <xs:documentation> Deve ser informado apenas um dos elementos:
+                                    Pais ou AntigoNomePais. </xs:documentation>
+                                </xs:annotation>
+                                <xs:element name="Pais" minOccurs="1" maxOccurs="1">
                                   <xs:annotation>
                                     <xs:documentation>País de nascimento do declarado, conforme
                                       tabela de países</xs:documentation>
@@ -499,7 +545,7 @@
                                     </xs:restriction>
                                   </xs:simpleType>
                                 </xs:element>
-                                <xs:element name="AntigoNomePais" minOccurs="0" maxOccurs="1">
+                                <xs:element name="AntigoNomePais" minOccurs="1" maxOccurs="1">
                                   <xs:annotation>
                                     <xs:documentation>País de nascimento (por extenso), no caso de
                                       país extinto</xs:documentation>
@@ -517,51 +563,9 @@
                         </xs:sequence>
                       </xs:complexType>
                     </xs:element>
-                    <xs:element name="EnderecoLivre" minOccurs="0" maxOccurs="1">
+                    <xs:element name="Endereco" minOccurs="1" maxOccurs="unbounded">
                       <xs:annotation>
-                        <xs:documentation>Endereço principal do declarado</xs:documentation>
-                      </xs:annotation>
-                      <xs:simpleType>
-                        <xs:restriction base="xs:string">
-                          <xs:minLength value="0" />
-                          <xs:maxLength value="200" />
-                        </xs:restriction>
-                      </xs:simpleType>
-                    </xs:element>
-                    <xs:element name="tpEndereco" minOccurs="0" maxOccurs="1">
-                      <xs:simpleType>
-                        <xs:annotation>
-                          <xs:documentation>Tipo do endereço principal do declarado</xs:documentation>
-                        </xs:annotation>
-                        <xs:restriction base="xs:string">
-                          <xs:minLength value="1" />
-                          <xs:maxLength value="7" />
-                        </xs:restriction>
-                      </xs:simpleType>
-                    </xs:element>
-                    <xs:element name="PaisEndereco" minOccurs="1" maxOccurs="1">
-                      <xs:annotation>
-                        <xs:documentation>País do endereço principal do declarado</xs:documentation>
-                      </xs:annotation>
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="Pais" minOccurs="1" maxOccurs="1">
-                            <xs:annotation>
-                              <xs:documentation>País</xs:documentation>
-                            </xs:annotation>
-                            <xs:simpleType>
-                              <xs:restriction base="xs:string">
-                                <xs:minLength value="1" />
-                                <xs:maxLength value="2" />
-                              </xs:restriction>
-                            </xs:simpleType>
-                          </xs:element>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="EnderecoOutros" minOccurs="0" maxOccurs="unbounded">
-                      <xs:annotation>
-                        <xs:documentation>Demais endereços do declarado</xs:documentation>
+                        <xs:documentation>Endereco do declarado</xs:documentation>
                       </xs:annotation>
                       <xs:complexType>
                         <xs:sequence>
@@ -577,7 +581,11 @@
                             </xs:simpleType>
                           </xs:element>
                           <xs:choice>
-                            <xs:element name="EnderecoLivre" minOccurs="0" maxOccurs="1">
+                            <xs:annotation>
+                              <xs:documentation> Deve ser informado apenas um dos elementos:
+                                EnderecoLivre ou EnderecoEstrutura. </xs:documentation>
+                            </xs:annotation>
+                            <xs:element name="EnderecoLivre" minOccurs="1" maxOccurs="1">
                               <xs:simpleType>
                                 <xs:annotation>
                                   <xs:documentation>Endereço na forma de texto livre</xs:documentation>
@@ -588,102 +596,81 @@
                                 </xs:restriction>
                               </xs:simpleType>
                             </xs:element>
-                            <xs:element name="EnderecoEstrutura" minOccurs="0" maxOccurs="1">
+                            <xs:element name="EnderecoEstrutura" minOccurs="1" maxOccurs="1">
                               <xs:annotation>
                                 <xs:documentation>Endereço na forma estruturada</xs:documentation>
                               </xs:annotation>
                               <xs:complexType>
                                 <xs:sequence>
-                                  <xs:element name="EnderecoLivre" minOccurs="0" maxOccurs="1">
+                                  <xs:element name="Logradouro" minOccurs="1" maxOccurs="1">
                                     <xs:simpleType>
                                       <xs:annotation>
-                                        <xs:documentation>Parte do endereço estruturado na forma de
-                                          texto livre</xs:documentation>
+                                        <xs:documentation>Logradouro</xs:documentation>
                                       </xs:annotation>
                                       <xs:restriction base="xs:string">
                                         <xs:minLength value="1" />
-                                        <xs:maxLength value="200" />
+                                        <xs:maxLength value="60" />
                                       </xs:restriction>
                                     </xs:simpleType>
                                   </xs:element>
-                                  <xs:element name="Endereco" minOccurs="0" maxOccurs="1">
-                                    <xs:annotation>
-                                      <xs:documentation>Dados do endereço na forma estruturada</xs:documentation>
-                                    </xs:annotation>
-                                    <xs:complexType>
-                                      <xs:sequence>
-                                        <xs:element name="Logradouro" minOccurs="0" maxOccurs="1">
-                                          <xs:simpleType>
-                                            <xs:annotation>
-                                              <xs:documentation>Logradouro</xs:documentation>
-                                            </xs:annotation>
-                                            <xs:restriction base="xs:string">
-                                              <xs:minLength value="1" />
-                                              <xs:maxLength value="60" />
-                                            </xs:restriction>
-                                          </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="Numero" minOccurs="0" maxOccurs="1">
-                                          <xs:simpleType>
-                                            <xs:annotation>
-                                              <xs:documentation>Número (ou outra identificação) no
-                                                logradouro</xs:documentation>
-                                            </xs:annotation>
-                                            <xs:restriction base="xs:string">
-                                              <xs:minLength value="1" />
-                                              <xs:maxLength value="10" />
-                                            </xs:restriction>
-                                          </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="Complemento" minOccurs="0" maxOccurs="1">
-                                          <xs:simpleType>
-                                            <xs:annotation>
-                                              <xs:documentation>Subunidade no local identificado
-                                                pelo logradouro/número</xs:documentation>
-                                            </xs:annotation>
-                                            <xs:restriction base="xs:string">
-                                              <xs:minLength value="1" />
-                                              <xs:maxLength value="10" />
-                                            </xs:restriction>
-                                          </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="Andar" minOccurs="0" maxOccurs="1">
-                                          <xs:simpleType>
-                                            <xs:annotation>
-                                              <xs:documentation>Andar da subunidade no local
-                                                identificado pelo logradouro/número</xs:documentation>
-                                            </xs:annotation>
-                                            <xs:restriction base="xs:string">
-                                              <xs:minLength value="1" />
-                                              <xs:maxLength value="10" />
-                                            </xs:restriction>
-                                          </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="Bairro" minOccurs="0" maxOccurs="1">
-                                          <xs:simpleType>
-                                            <xs:annotation>
-                                              <xs:documentation>Bairro (ou alguma outra subdivisão
-                                                da cidade)</xs:documentation>
-                                            </xs:annotation>
-                                            <xs:restriction base="xs:string">
-                                              <xs:minLength value="1" />
-                                              <xs:maxLength value="40" />
-                                            </xs:restriction>
-                                          </xs:simpleType>
-                                        </xs:element>
-                                        <xs:element name="CaixaPostal" minOccurs="0" maxOccurs="1">
-                                          <xs:simpleType>
-                                            <xs:annotation>
-                                              <xs:documentation>Código de Caixa Postal</xs:documentation>
-                                            </xs:annotation>
-                                            <xs:restriction base="xs:string">
-                                              <xs:minLength value="1" />
-                                              <xs:maxLength value="12" />
-                                            </xs:restriction>
-                                          </xs:simpleType>
-                                        </xs:element>
-                                      </xs:sequence>
-                                    </xs:complexType>
+                                  <xs:element name="Numero" minOccurs="1" maxOccurs="1">
+                                    <xs:simpleType>
+                                      <xs:annotation>
+                                        <xs:documentation>Número (ou outra identificação) no
+                                          logradouro</xs:documentation>
+                                      </xs:annotation>
+                                      <xs:restriction base="xs:string">
+                                        <xs:minLength value="1" />
+                                        <xs:maxLength value="10" />
+                                      </xs:restriction>
+                                    </xs:simpleType>
+                                  </xs:element>
+                                  <xs:element name="Complemento" minOccurs="0" maxOccurs="1">
+                                    <xs:simpleType>
+                                      <xs:annotation>
+                                        <xs:documentation>Subunidade no local identificado pelo
+                                          logradouro/número</xs:documentation>
+                                      </xs:annotation>
+                                      <xs:restriction base="xs:string">
+                                        <xs:minLength value="1" />
+                                        <xs:maxLength value="10" />
+                                      </xs:restriction>
+                                    </xs:simpleType>
+                                  </xs:element>
+                                  <xs:element name="Andar" minOccurs="0" maxOccurs="1">
+                                    <xs:simpleType>
+                                      <xs:annotation>
+                                        <xs:documentation>Andar da subunidade no local identificado
+                                          pelo logradouro/número</xs:documentation>
+                                      </xs:annotation>
+                                      <xs:restriction base="xs:string">
+                                        <xs:minLength value="1" />
+                                        <xs:maxLength value="10" />
+                                      </xs:restriction>
+                                    </xs:simpleType>
+                                  </xs:element>
+                                  <xs:element name="Bairro" minOccurs="0" maxOccurs="1">
+                                    <xs:simpleType>
+                                      <xs:annotation>
+                                        <xs:documentation>Bairro (ou alguma outra subdivisão da
+                                          cidade)</xs:documentation>
+                                      </xs:annotation>
+                                      <xs:restriction base="xs:string">
+                                        <xs:minLength value="1" />
+                                        <xs:maxLength value="40" />
+                                      </xs:restriction>
+                                    </xs:simpleType>
+                                  </xs:element>
+                                  <xs:element name="CaixaPostal" minOccurs="0" maxOccurs="1">
+                                    <xs:simpleType>
+                                      <xs:annotation>
+                                        <xs:documentation>Código de Caixa Postal</xs:documentation>
+                                      </xs:annotation>
+                                      <xs:restriction base="xs:string">
+                                        <xs:minLength value="1" />
+                                        <xs:maxLength value="12" />
+                                      </xs:restriction>
+                                    </xs:simpleType>
                                   </xs:element>
                                   <xs:element name="CEP" minOccurs="1" maxOccurs="1">
                                     <xs:simpleType>
@@ -790,7 +777,9 @@
                             </xs:annotation>
                             <xs:simpleType>
                               <xs:restriction base="xs:unsignedByte">
-                                <xs:pattern value="[1;3;5]" />
+                                <xs:enumeration value="1" />
+                                <xs:enumeration value="3" />
+                                <xs:enumeration value="5" />
                               </xs:restriction>
                             </xs:simpleType>
                           </xs:element>
@@ -818,7 +807,7 @@
                           </xs:element>
                           <xs:element name="NIF" minOccurs="0" maxOccurs="unbounded">
                             <xs:annotation>
-                              <xs:documentation>Número de Identificação Fiscal</xs:documentation>
+                              <xs:documentation>Número de Identificação Fiscal no Exterior</xs:documentation>
                             </xs:annotation>
                             <xs:complexType>
                               <xs:sequence>
@@ -845,8 +834,32 @@
                                     </xs:restriction>
                                   </xs:simpleType>
                                 </xs:element>
+                                <xs:element name="motivoNoTINReasonB" minOccurs="0" maxOccurs="1">
+                                  <xs:annotation>
+                                    <xs:documentation>Informar o motivo da não existência do NIF</xs:documentation>
+                                  </xs:annotation>
+                                  <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                      <xs:minLength value="1" />
+                                      <xs:maxLength value="200" />
+                                    </xs:restriction>
+                                  </xs:simpleType>
+                                </xs:element>
                               </xs:sequence>
                             </xs:complexType>
+                          </xs:element>
+                          <xs:element name="inDeclaracaoPropriaCRS" minOccurs="1" maxOccurs="1">
+                            <xs:annotation>
+                              <xs:documentation> Indicador se o Proprietário possui a declaração
+                                própria (auto declaração): CRS1001 - Tem declaração própria; CRS1002
+                                - Não tem declaração própria. </xs:documentation>
+                            </xs:annotation>
+                            <xs:simpleType>
+                              <xs:restriction base="xs:string">
+                                <xs:enumeration value="CRS1001" />
+                                <xs:enumeration value="CRS1002" />
+                              </xs:restriction>
+                            </xs:simpleType>
                           </xs:element>
                           <xs:element name="Nome" minOccurs="1" maxOccurs="1">
                             <xs:annotation>
@@ -861,7 +874,7 @@
                           </xs:element>
                           <xs:element name="tpNome" minOccurs="0" maxOccurs="1">
                             <xs:annotation>
-                              <xs:documentation>Tipo do nome</xs:documentation>
+                              <xs:documentation>Tipo do nome do proprietário</xs:documentation>
                             </xs:annotation>
                             <xs:simpleType>
                               <xs:restriction base="xs:string">
@@ -872,7 +885,7 @@
                           </xs:element>
                           <xs:element name="NomeOutros" minOccurs="0" maxOccurs="unbounded">
                             <xs:annotation>
-                              <xs:documentation>Outros nomes do proprietário</xs:documentation>
+                              <xs:documentation>Demais nomes do proprietário</xs:documentation>
                             </xs:annotation>
                             <xs:complexType>
                               <xs:sequence>
@@ -895,7 +908,8 @@
                                       </xs:element>
                                       <xs:element name="PrecTitulo" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Título anterior</xs:documentation>
+                                          <xs:documentation>Informação que precede ao título do nome
+                                            (ex: “vossa excelência”, “espólio de”)</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -906,7 +920,7 @@
                                       </xs:element>
                                       <xs:element name="Titulo" minOccurs="0" maxOccurs="unbounded">
                                         <xs:annotation>
-                                          <xs:documentation>Título</xs:documentation>
+                                          <xs:documentation>Título do nome (ex: sr., sra.)</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -917,13 +931,14 @@
                                       </xs:element>
                                       <xs:element name="PrimeiroNome" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Primeiro nome</xs:documentation>
+                                          <xs:documentation>Informação do primeiro nome</xs:documentation>
                                         </xs:annotation>
                                         <xs:complexType>
                                           <xs:sequence>
                                             <xs:element name="Tipo" minOccurs="0" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Tipo</xs:documentation>
+                                                <xs:documentation>Tipo do primeiro nome (ex: nome
+                                                  próprio, nome de batismo)</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -934,7 +949,7 @@
                                             </xs:element>
                                             <xs:element name="Nome" minOccurs="1" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Nome</xs:documentation>
+                                                <xs:documentation>Primeiro nome</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -949,13 +964,14 @@
                                       <xs:element name="MeioNome" minOccurs="0"
                                         maxOccurs="unbounded">
                                         <xs:annotation>
-                                          <xs:documentation>Nome do meio</xs:documentation>
+                                          <xs:documentation>Informação do nome do meio</xs:documentation>
                                         </xs:annotation>
                                         <xs:complexType>
                                           <xs:sequence>
                                             <xs:element name="Tipo" minOccurs="0" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Tipo</xs:documentation>
+                                                <xs:documentation>Tipo do nome do meio (ex: nome de
+                                                  solteiro, nome de família)</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -966,7 +982,7 @@
                                             </xs:element>
                                             <xs:element name="Nome" minOccurs="1" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Nome</xs:documentation>
+                                                <xs:documentation>Nome do meio</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -980,13 +996,16 @@
                                       </xs:element>
                                       <xs:element name="PrefixoNome" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Prefixo do nome</xs:documentation>
+                                          <xs:documentation>Informação de prefixo associado a alguma
+                                            parte do nome (ex: “de”, “da”, “dos”)</xs:documentation>
                                         </xs:annotation>
                                         <xs:complexType>
                                           <xs:sequence>
                                             <xs:element name="Tipo" minOccurs="0" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Tipo</xs:documentation>
+                                                <xs:documentation>Referência à parte do nome
+                                                  associada ao prefixo (ex: primeiro, meio, último
+                                                  nome)</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -997,7 +1016,8 @@
                                             </xs:element>
                                             <xs:element name="Nome" minOccurs="1" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Nome</xs:documentation>
+                                                <xs:documentation>Prefixo associado a alguma parte
+                                                  do nome</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -1011,13 +1031,14 @@
                                       </xs:element>
                                       <xs:element name="UltimoNome" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Último nome</xs:documentation>
+                                          <xs:documentation>Informação do último nome</xs:documentation>
                                         </xs:annotation>
                                         <xs:complexType>
                                           <xs:sequence>
                                             <xs:element name="Tipo" minOccurs="0" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Tipo</xs:documentation>
+                                                <xs:documentation>Tipo do último nome (ex:
+                                                  sobrenome, nome de família)</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -1028,7 +1049,7 @@
                                             </xs:element>
                                             <xs:element name="Nome" minOccurs="1" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Nome</xs:documentation>
+                                                <xs:documentation>Último nome</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -1043,7 +1064,8 @@
                                       <xs:element name="IdGeracao" minOccurs="0"
                                         maxOccurs="unbounded">
                                         <xs:annotation>
-                                          <xs:documentation>Identificador de geração</xs:documentation>
+                                          <xs:documentation>Parte do nome indicativa de geração (ex:
+                                            junior, neto, III)</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -1054,7 +1076,8 @@
                                       </xs:element>
                                       <xs:element name="Sufixo" minOccurs="0" maxOccurs="unbounded">
                                         <xs:annotation>
-                                          <xs:documentation>Sufixo</xs:documentation>
+                                          <xs:documentation>Siglas credenciais do nome (ex: PhD, VQ,
+                                            QC)</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -1065,7 +1088,8 @@
                                       </xs:element>
                                       <xs:element name="GenSufixo" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Sufixo geral</xs:documentation>
+                                          <xs:documentation>Indicativo associado ao nome (ex:
+                                            “falecido”, “aposentado”)</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -1080,51 +1104,9 @@
                               </xs:sequence>
                             </xs:complexType>
                           </xs:element>
-                          <xs:element name="EnderecoLivre" minOccurs="1" maxOccurs="1">
+                          <xs:element name="Endereco" minOccurs="1" maxOccurs="unbounded">
                             <xs:annotation>
-                              <xs:documentation>Endereço na forma de texto livre</xs:documentation>
-                            </xs:annotation>
-                            <xs:simpleType>
-                              <xs:restriction base="xs:string">
-                                <xs:minLength value="1" />
-                                <xs:maxLength value="200" />
-                              </xs:restriction>
-                            </xs:simpleType>
-                          </xs:element>
-                          <xs:element name="tpEndereco" minOccurs="0" maxOccurs="1">
-                            <xs:annotation>
-                              <xs:documentation>Tipo do endereço</xs:documentation>
-                            </xs:annotation>
-                            <xs:simpleType>
-                              <xs:restriction base="xs:string">
-                                <xs:minLength value="1" />
-                                <xs:maxLength value="7" />
-                              </xs:restriction>
-                            </xs:simpleType>
-                          </xs:element>
-                          <xs:element name="PaisEndereco" minOccurs="1" maxOccurs="1">
-                            <xs:annotation>
-                              <xs:documentation>País do endereço do proprietário</xs:documentation>
-                            </xs:annotation>
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="Pais" minOccurs="1" maxOccurs="1">
-                                  <xs:annotation>
-                                    <xs:documentation>País</xs:documentation>
-                                  </xs:annotation>
-                                  <xs:simpleType>
-                                    <xs:restriction base="xs:string">
-                                      <xs:minLength value="1" />
-                                      <xs:maxLength value="2" />
-                                    </xs:restriction>
-                                  </xs:simpleType>
-                                </xs:element>
-                              </xs:sequence>
-                            </xs:complexType>
-                          </xs:element>
-                          <xs:element name="EnderecoOutros" minOccurs="0" maxOccurs="unbounded">
-                            <xs:annotation>
-                              <xs:documentation>Demais endereços</xs:documentation>
+                              <xs:documentation>Endereços do proprietário</xs:documentation>
                             </xs:annotation>
                             <xs:complexType>
                               <xs:sequence>
@@ -1140,10 +1122,14 @@
                                   </xs:simpleType>
                                 </xs:element>
                                 <xs:choice>
-                                  <xs:element name="EnderecoLivre" minOccurs="0" maxOccurs="1">
+                                  <xs:annotation>
+                                    <xs:documentation> Deve ser informado apenas um dos elementos:
+                                      EnderecoLivre ou EnderecoEstrutura. </xs:documentation>
+                                  </xs:annotation>
+                                  <xs:element name="EnderecoLivre" minOccurs="1" maxOccurs="1">
                                     <xs:simpleType>
                                       <xs:annotation>
-                                        <xs:documentation>Outro endereço na forma de texto livre</xs:documentation>
+                                        <xs:documentation>Endereço na forma de texto livre</xs:documentation>
                                       </xs:annotation>
                                       <xs:restriction base="xs:string">
                                         <xs:minLength value="1" />
@@ -1151,106 +1137,87 @@
                                       </xs:restriction>
                                     </xs:simpleType>
                                   </xs:element>
-                                  <xs:element name="EnderecoEstrutura" minOccurs="0" maxOccurs="1">
+                                  <xs:element name="EnderecoEstrutura" minOccurs="1" maxOccurs="1">
                                     <xs:annotation>
-                                      <xs:documentation>Outro endereço na forma estruturada</xs:documentation>
+                                      <xs:documentation>Endereço na forma estruturada</xs:documentation>
                                     </xs:annotation>
                                     <xs:complexType>
                                       <xs:sequence>
-                                        <xs:element name="EnderecoLivre" minOccurs="0" maxOccurs="1">
+                                        <xs:element name="Logradouro" minOccurs="1" maxOccurs="1">
                                           <xs:simpleType>
                                             <xs:annotation>
-                                              <xs:documentation>Parte do endereço na forma de texto
-                                                livre</xs:documentation>
+                                              <xs:documentation>Logradouro</xs:documentation>
                                             </xs:annotation>
                                             <xs:restriction base="xs:string">
                                               <xs:minLength value="1" />
-                                              <xs:maxLength value="200" />
+                                              <xs:maxLength value="60" />
                                             </xs:restriction>
                                           </xs:simpleType>
                                         </xs:element>
-                                        <xs:element name="Endereco" minOccurs="0" maxOccurs="1">
-                                          <xs:annotation>
-                                            <xs:documentation>Dados do endereço</xs:documentation>
-                                          </xs:annotation>
-                                          <xs:complexType>
-                                            <xs:sequence>
-                                              <xs:element name="Logradouro" minOccurs="0"
-                                                maxOccurs="1">
-                                                <xs:simpleType>
-                                                  <xs:annotation>
-                                                    <xs:documentation>Logradouro</xs:documentation>
-                                                  </xs:annotation>
-                                                  <xs:restriction base="xs:string">
-                                                    <xs:minLength value="1" />
-                                                    <xs:maxLength value="60" />
-                                                  </xs:restriction>
-                                                </xs:simpleType>
-                                              </xs:element>
-                                              <xs:element name="Numero" minOccurs="0" maxOccurs="1">
-                                                <xs:simpleType>
-                                                  <xs:annotation>
-                                                    <xs:documentation>Número</xs:documentation>
-                                                  </xs:annotation>
-                                                  <xs:restriction base="xs:string">
-                                                    <xs:minLength value="1" />
-                                                    <xs:maxLength value="10" />
-                                                  </xs:restriction>
-                                                </xs:simpleType>
-                                              </xs:element>
-                                              <xs:element name="Complemento" minOccurs="0"
-                                                maxOccurs="1">
-                                                <xs:simpleType>
-                                                  <xs:annotation>
-                                                    <xs:documentation>Complemento</xs:documentation>
-                                                  </xs:annotation>
-                                                  <xs:restriction base="xs:string">
-                                                    <xs:minLength value="1" />
-                                                    <xs:maxLength value="10" />
-                                                  </xs:restriction>
-                                                </xs:simpleType>
-                                              </xs:element>
-                                              <xs:element name="Andar" minOccurs="0" maxOccurs="1">
-                                                <xs:simpleType>
-                                                  <xs:annotation>
-                                                    <xs:documentation>Andar</xs:documentation>
-                                                  </xs:annotation>
-                                                  <xs:restriction base="xs:string">
-                                                    <xs:minLength value="1" />
-                                                    <xs:maxLength value="10" />
-                                                  </xs:restriction>
-                                                </xs:simpleType>
-                                              </xs:element>
-                                              <xs:element name="Bairro" minOccurs="0" maxOccurs="1">
-                                                <xs:simpleType>
-                                                  <xs:annotation>
-                                                    <xs:documentation>Bairro</xs:documentation>
-                                                  </xs:annotation>
-                                                  <xs:restriction base="xs:string">
-                                                    <xs:minLength value="1" />
-                                                    <xs:maxLength value="40" />
-                                                  </xs:restriction>
-                                                </xs:simpleType>
-                                              </xs:element>
-                                              <xs:element name="CaixaPostal" minOccurs="0"
-                                                maxOccurs="1">
-                                                <xs:simpleType>
-                                                  <xs:annotation>
-                                                    <xs:documentation>Caixa postal</xs:documentation>
-                                                  </xs:annotation>
-                                                  <xs:restriction base="xs:string">
-                                                    <xs:minLength value="1" />
-                                                    <xs:maxLength value="12" />
-                                                  </xs:restriction>
-                                                </xs:simpleType>
-                                              </xs:element>
-                                            </xs:sequence>
-                                          </xs:complexType>
+                                        <xs:element name="Numero" minOccurs="1" maxOccurs="1">
+                                          <xs:simpleType>
+                                            <xs:annotation>
+                                              <xs:documentation>Número (ou outra identificação) no
+                                                logradouro</xs:documentation>
+                                            </xs:annotation>
+                                            <xs:restriction base="xs:string">
+                                              <xs:minLength value="1" />
+                                              <xs:maxLength value="10" />
+                                            </xs:restriction>
+                                          </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="Complemento" minOccurs="0" maxOccurs="1">
+                                          <xs:simpleType>
+                                            <xs:annotation>
+                                              <xs:documentation>Subunidade no local identificado
+                                                pelo logradouro/número</xs:documentation>
+                                            </xs:annotation>
+                                            <xs:restriction base="xs:string">
+                                              <xs:minLength value="1" />
+                                              <xs:maxLength value="10" />
+                                            </xs:restriction>
+                                          </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="Andar" minOccurs="0" maxOccurs="1">
+                                          <xs:simpleType>
+                                            <xs:annotation>
+                                              <xs:documentation>Andar da subunidade no local
+                                                identificado pelo logradouro/número</xs:documentation>
+                                            </xs:annotation>
+                                            <xs:restriction base="xs:string">
+                                              <xs:minLength value="1" />
+                                              <xs:maxLength value="10" />
+                                            </xs:restriction>
+                                          </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="Bairro" minOccurs="0" maxOccurs="1">
+                                          <xs:simpleType>
+                                            <xs:annotation>
+                                              <xs:documentation>Bairro (ou alguma outra subdivisão
+                                                da cidade)</xs:documentation>
+                                            </xs:annotation>
+                                            <xs:restriction base="xs:string">
+                                              <xs:minLength value="1" />
+                                              <xs:maxLength value="40" />
+                                            </xs:restriction>
+                                          </xs:simpleType>
+                                        </xs:element>
+                                        <xs:element name="CaixaPostal" minOccurs="0" maxOccurs="1">
+                                          <xs:simpleType>
+                                            <xs:annotation>
+                                              <xs:documentation>Código de Caixa Postal</xs:documentation>
+                                            </xs:annotation>
+                                            <xs:restriction base="xs:string">
+                                              <xs:minLength value="1" />
+                                              <xs:maxLength value="12" />
+                                            </xs:restriction>
+                                          </xs:simpleType>
                                         </xs:element>
                                         <xs:element name="CEP" minOccurs="1" maxOccurs="1">
                                           <xs:simpleType>
                                             <xs:annotation>
-                                              <xs:documentation>Código de Endereçamento Postal</xs:documentation>
+                                              <xs:documentation>Código de endereçamento postal do
+                                                endereço</xs:documentation>
                                             </xs:annotation>
                                             <xs:restriction base="xs:string">
                                               <xs:minLength value="1" />
@@ -1261,7 +1228,8 @@
                                         <xs:element name="Municipio" minOccurs="1" maxOccurs="1">
                                           <xs:simpleType>
                                             <xs:annotation>
-                                              <xs:documentation>Município</xs:documentation>
+                                              <xs:documentation>Município brasileiro (ou cidade no
+                                                exterior)</xs:documentation>
                                             </xs:annotation>
                                             <xs:restriction base="xs:string">
                                               <xs:minLength value="1" />
@@ -1272,7 +1240,8 @@
                                         <xs:element name="UF" minOccurs="1" maxOccurs="1">
                                           <xs:simpleType>
                                             <xs:annotation>
-                                              <xs:documentation>Unidade da Federação</xs:documentation>
+                                              <xs:documentation>Unidade da Federação Brasileira (ou
+                                                subdivisão do país estrangeiro)</xs:documentation>
                                             </xs:annotation>
                                             <xs:restriction base="xs:string">
                                               <xs:minLength value="1" />
@@ -1287,7 +1256,7 @@
                                 <xs:element name="Pais" minOccurs="1" maxOccurs="1">
                                   <xs:simpleType>
                                     <xs:annotation>
-                                      <xs:documentation>País</xs:documentation>
+                                      <xs:documentation>País do endereço</xs:documentation>
                                     </xs:annotation>
                                     <xs:restriction base="xs:string">
                                       <xs:minLength value="1" />
@@ -1300,7 +1269,7 @@
                           </xs:element>
                           <xs:element name="paisResid" minOccurs="0" maxOccurs="unbounded">
                             <xs:annotation>
-                              <xs:documentation>País de residência</xs:documentation>
+                              <xs:documentation>País de residência do proprietário</xs:documentation>
                             </xs:annotation>
                             <xs:complexType>
                               <xs:sequence>
@@ -1320,13 +1289,13 @@
                           </xs:element>
                           <xs:element name="PaisNacionalidade" minOccurs="0" maxOccurs="unbounded">
                             <xs:annotation>
-                              <xs:documentation>País de nacionalidade</xs:documentation>
+                              <xs:documentation>País de nacionalidade do proprietário</xs:documentation>
                             </xs:annotation>
                             <xs:complexType>
                               <xs:sequence>
                                 <xs:element name="Pais" minOccurs="1" maxOccurs="1">
                                   <xs:annotation>
-                                    <xs:documentation>País</xs:documentation>
+                                    <xs:documentation>nacionalidade</xs:documentation>
                                   </xs:annotation>
                                   <xs:simpleType>
                                     <xs:restriction base="xs:string">
@@ -1340,7 +1309,7 @@
                           </xs:element>
                           <xs:element name="DataNasc" minOccurs="0" maxOccurs="1">
                             <xs:annotation>
-                              <xs:documentation>Data de nascimento</xs:documentation>
+                              <xs:documentation>Data de nascimento. Formato: AAAA-MM-DD</xs:documentation>
                             </xs:annotation>
                             <xs:simpleType>
                               <xs:restriction base="xs:date" />
@@ -1348,13 +1317,14 @@
                           </xs:element>
                           <xs:element name="InfoNascimento" minOccurs="0" maxOccurs="1">
                             <xs:annotation>
-                              <xs:documentation>Demais informações de nascimento</xs:documentation>
+                              <xs:documentation>Demais informações de nascimento do proprietário</xs:documentation>
                             </xs:annotation>
                             <xs:complexType>
                               <xs:sequence>
                                 <xs:element name="Municipio" minOccurs="0" maxOccurs="1">
                                   <xs:annotation>
-                                    <xs:documentation>Município</xs:documentation>
+                                    <xs:documentation>Município brasileiro (ou cidade no exterior)
+                                      do local do nascimento</xs:documentation>
                                   </xs:annotation>
                                   <xs:simpleType>
                                     <xs:restriction base="xs:string">
@@ -1365,7 +1335,8 @@
                                 </xs:element>
                                 <xs:element name="Bairro" minOccurs="0" maxOccurs="1">
                                   <xs:annotation>
-                                    <xs:documentation>Bairro</xs:documentation>
+                                    <xs:documentation>Bairro (ou alguma outra subdivisão da cidade)
+                                      do local do nascimento</xs:documentation>
                                   </xs:annotation>
                                   <xs:simpleType>
                                     <xs:restriction base="xs:string">
@@ -1376,13 +1347,18 @@
                                 </xs:element>
                                 <xs:element name="PaisNasc" minOccurs="0" maxOccurs="1">
                                   <xs:annotation>
-                                    <xs:documentation>País de nascimento</xs:documentation>
+                                    <xs:documentation>Informação do país de nascimento</xs:documentation>
                                   </xs:annotation>
                                   <xs:complexType>
                                     <xs:choice>
-                                      <xs:element name="Pais" minOccurs="0" maxOccurs="1">
+                                      <xs:annotation>
+                                        <xs:documentation> Deve ser informado apenas um dos
+                                          elementos: Pais ou AntigoNomePais. </xs:documentation>
+                                      </xs:annotation>
+                                      <xs:element name="Pais" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>País</xs:documentation>
+                                          <xs:documentation>País de nascimento, conforme tabela de
+                                            países</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -1391,9 +1367,10 @@
                                           </xs:restriction>
                                         </xs:simpleType>
                                       </xs:element>
-                                      <xs:element name="AntigoNomePais" minOccurs="0" maxOccurs="1">
+                                      <xs:element name="AntigoNomePais" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Antigo nome do país</xs:documentation>
+                                          <xs:documentation>País de nascimento (por extenso), no
+                                            caso de país extinto</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
@@ -1417,7 +1394,8 @@
                               <xs:sequence>
                                 <xs:element name="Pais" minOccurs="1" maxOccurs="1">
                                   <xs:annotation>
-                                    <xs:documentation>País reportável</xs:documentation>
+                                    <xs:documentation>País. Informar sempre “BR”, e “US” quando o
+                                      proprietário for reportável para o FATCA. Não usar para o CRS.</xs:documentation>
                                   </xs:annotation>
                                   <xs:simpleType>
                                     <xs:restriction base="xs:string">
@@ -1437,13 +1415,13 @@
               </xs:element>
               <xs:element name="mesCaixa" minOccurs="1" maxOccurs="1">
                 <xs:annotation>
-                  <xs:documentation>Operações financeiras</xs:documentation>
+                  <xs:documentation>Mês e ano que está sendo reportado</xs:documentation>
                 </xs:annotation>
                 <xs:complexType>
                   <xs:sequence>
                     <xs:element name="anoMesCaixa" minOccurs="1" maxOccurs="1">
                       <xs:annotation>
-                        <xs:documentation>Mês caixa que está sendo reportado</xs:documentation>
+                        <xs:documentation>Ano/mês caixa que está sendo reportado. Formato: AAAAMM</xs:documentation>
                       </xs:annotation>
                       <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -1516,7 +1494,8 @@
                                       </xs:element>
                                       <xs:element name="dtConcessao" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Data da concessão</xs:documentation>
+                                          <xs:documentation>Data de concessão da medida judicial.
+                                            Formato AAAA-MM-DD.</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:date" />
@@ -1524,7 +1503,9 @@
                                       </xs:element>
                                       <xs:element name="dtCassacao" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Data da cassação</xs:documentation>
+                                          <xs:documentation>Informar, caso ocorra o fim da vigência
+                                            da medida judicial, a data de sua cassação Formato
+                                            AAAA-MM-DD.</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:date" />
@@ -1605,15 +1586,61 @@
                                           </xs:restriction>
                                         </xs:simpleType>
                                       </xs:element>
+                                      <xs:element name="dtAberturaConta" minOccurs="1" maxOccurs="1">
+                                        <xs:annotation>
+                                          <xs:documentation>Data de abertura da conta. Formato
+                                            AAAA-MM-DD</xs:documentation>
+                                        </xs:annotation>
+                                        <xs:simpleType>
+                                          <xs:restriction base="xs:date" />
+                                        </xs:simpleType>
+                                      </xs:element>
+                                      <xs:element name="formaAberturaConta" minOccurs="1"
+                                        maxOccurs="1">
+                                        <xs:annotation>
+                                          <xs:documentation> Forma de abertura da conta: 1 -
+                                            presencial; 2 - virtual. </xs:documentation>
+                                        </xs:annotation>
+                                        <xs:simpleType>
+                                          <xs:restriction base="xs:unsignedByte">
+                                            <xs:enumeration value="1" />
+                                            <xs:enumeration value="2" />
+                                          </xs:restriction>
+                                        </xs:simpleType>
+                                      </xs:element>
+                                      <xs:element name="celularAberturaConta" minOccurs="0"
+                                        maxOccurs="1">
+                                        <xs:annotation>
+                                          <xs:documentation> Número do celular utilizado para
+                                            abertura da conta </xs:documentation>
+                                        </xs:annotation>
+                                        <xs:simpleType>
+                                          <xs:restriction base="xs:string">
+                                            <xs:minLength value="9" />
+                                            <xs:maxLength value="50" />
+                                          </xs:restriction>
+                                        </xs:simpleType>
+                                      </xs:element>
+                                      <xs:element name="MACAddressAberturaConta" minOccurs="0"
+                                        maxOccurs="1">
+                                        <xs:annotation>
+                                          <xs:documentation> MACAddress de onde originou a
+                                            solicitação de abertura da conta </xs:documentation>
+                                        </xs:annotation>
+                                        <xs:simpleType>
+                                          <xs:restriction base="xs:string">
+                                            <xs:minLength value="12" />
+                                            <xs:maxLength value="50" />
+                                          </xs:restriction>
+                                        </xs:simpleType>
+                                      </xs:element>
                                       <xs:element name="tpRelacaoDeclarado" minOccurs="1"
                                         maxOccurs="1">
                                         <xs:annotation>
                                           <xs:documentation>Tipo de relação do declarado</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
-                                          <xs:restriction base="xs:unsignedInt">
-                                            <xs:totalDigits value="2" />
-                                          </xs:restriction>
+                                          <xs:restriction base="xs:unsignedByte" />
                                         </xs:simpleType>
                                       </xs:element>
                                       <xs:element name="moeda" minOccurs="0" maxOccurs="1">
@@ -1623,8 +1650,7 @@
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:string">
-                                            <xs:minLength value="3" />
-                                            <xs:maxLength value="3" />
+                                            <xs:length value="3" />
                                           </xs:restriction>
                                         </xs:simpleType>
                                       </xs:element>
@@ -1652,14 +1678,18 @@
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:unsignedByte">
-                                                  <xs:pattern value="[1;2;3;4;5]" />
+                                                  <xs:enumeration value="1" />
+                                                  <xs:enumeration value="2" />
+                                                  <xs:enumeration value="3" />
+                                                  <xs:enumeration value="4" />
+                                                  <xs:enumeration value="5" />
                                                 </xs:restriction>
                                               </xs:simpleType>
                                             </xs:element>
                                             <xs:element name="NIIntermediario" minOccurs="0"
                                               maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>NI</xs:documentation>
+                                                <xs:documentation>Número de Identificação (NI)</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -1671,7 +1701,7 @@
                                           </xs:sequence>
                                         </xs:complexType>
                                       </xs:element>
-                                      <xs:element name="NoTitulares" minOccurs="0" maxOccurs="1">
+                                      <xs:element name="NoTitulares" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
                                           <xs:documentation>Número de titulares da conta</xs:documentation>
                                         </xs:annotation>
@@ -1686,7 +1716,8 @@
                                       <xs:element name="dtEncerramentoConta" minOccurs="0"
                                         maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Data de encerramento da conta</xs:documentation>
+                                          <xs:documentation>Data de Encerramento da Conta. Formato
+                                            AAAA-MM-DD</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:date" />
@@ -1694,21 +1725,23 @@
                                       </xs:element>
                                       <xs:element name="IndInatividade" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Indicador de inatividade da conta</xs:documentation>
+                                          <xs:documentation>Indicador de inatividade da conta: 1 -
+                                            sim</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:unsignedByte">
-                                            <xs:pattern value="[1]" />
+                                            <xs:enumeration value="1" />
                                           </xs:restriction>
                                         </xs:simpleType>
                                       </xs:element>
                                       <xs:element name="IndNDoc" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Indicador de conta não documentada</xs:documentation>
+                                          <xs:documentation>Indicador de conta não documentada: 1 -
+                                            sim</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:unsignedByte">
-                                            <xs:pattern value="[1]" />
+                                            <xs:enumeration value="1" />
                                           </xs:restriction>
                                         </xs:simpleType>
                                       </xs:element>
@@ -1805,7 +1838,8 @@
                                             </xs:element>
                                             <xs:element name="vlrUltDia" minOccurs="0" maxOccurs="1">
                                               <xs:annotation>
-                                                <xs:documentation>Saldo no último dia do mês</xs:documentation>
+                                                <xs:documentation>Saldo no último dia do mês ou do
+                                                  momento anterior ao encerramento da conta</xs:documentation>
                                               </xs:annotation>
                                               <xs:simpleType>
                                                 <xs:restriction base="xs:string">
@@ -1918,7 +1952,8 @@
                                       </xs:element>
                                       <xs:element name="dtConcessao" minOccurs="1" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Data da concessão</xs:documentation>
+                                          <xs:documentation>Data de concessão da medida judicial.
+                                            Formato AAAA-MM-DD.</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:date" />
@@ -1926,7 +1961,9 @@
                                       </xs:element>
                                       <xs:element name="dtCassacao" minOccurs="0" maxOccurs="1">
                                         <xs:annotation>
-                                          <xs:documentation>Data da cassação</xs:documentation>
+                                          <xs:documentation>Informar, caso ocorra o fim da vigência
+                                            da medida judicial, a data de sua cassação. Formato
+                                            AAAA-MM-DD.</xs:documentation>
                                         </xs:annotation>
                                         <xs:simpleType>
                                           <xs:restriction base="xs:date" />

@@ -1,11 +1,12 @@
 import os from 'os'
-import { E_WORKER_STATE, IWorkerThread } from "../../../interfaces/application/workers/IWorkerThread.js"
-import { IWorkerThreadPool } from '../../../interfaces/application/workers/IWorkerThreadPool.js'
+import { E_WORKER_STATE, IWorker } from "../../../interfaces/application/workers/IWorker.js"
+import { IWorkersPool } from '../../../interfaces/application/workers/IWorkersPool.js'
 
-export abstract class AWorkerThreadPool<EntryData> implements IWorkerThreadPool<EntryData> {
-  public workerThreadsPool: Map<number, IWorkerThread<EntryData>> = new Map()
 
-  constructor(private workerThreadFactory: () => IWorkerThread<EntryData>) {}
+export abstract class AWorkersPool<EntryData> implements IWorkersPool<EntryData> {
+  public workerThreadsPool: Map<number, IWorker<EntryData>> = new Map()
+
+  constructor(private workerThreadFactory: () => IWorker<EntryData>) {}
 
   public async init(filePath: `./dist/${string}.js`, turnOnQuantity: number | null = null): Promise<void> {
     if (!turnOnQuantity) {
@@ -26,7 +27,7 @@ export abstract class AWorkerThreadPool<EntryData> implements IWorkerThreadPool<
       // child_process uses kill() instead of worker_threads' terminate()
       workerThreadInstance.worker.kill()
       workerThreadInstance.changeStateTo(E_WORKER_STATE.OFFLINE)
-      console.log('[LOG][INFO] - WorkerThreadManager - stopAll - sucesso')
+      console.log('[LOG][INFO] - WorkerManager - stopAll - sucesso')
     }
   }
 
@@ -34,7 +35,7 @@ export abstract class AWorkerThreadPool<EntryData> implements IWorkerThreadPool<
     const workerThreadInstance = this.workerThreadsPool.get(id)
     workerThreadInstance!.worker.kill()
     workerThreadInstance!.changeStateTo(E_WORKER_STATE.OFFLINE)
-    console.log('[LOG][INFO] - WorkerThreadManager - stopById - sucesso')
+    console.log('[LOG][INFO] - WorkerManager - stopById - sucesso')
   }
 
   public allWorkersIsBusy(): boolean {

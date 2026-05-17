@@ -1,3 +1,3 @@
-export interface IXmlSigner {
-  handle(data: string): Promise<string>
+export interface IXmlSigner<T> {
+  handle(data: T): Promise<string>
 }

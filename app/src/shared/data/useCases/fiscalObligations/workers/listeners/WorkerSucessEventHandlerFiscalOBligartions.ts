@@ -1,14 +1,14 @@
-import { IWorkerThreadSucessEventHandler } from "../../../../../../shared/data/interfaces/application/workers/events/IWorkerThreadSucessEventHandler.js"
-import { TPostMessageStrucData } from "../../../../../../shared/data/interfaces/application/workers/IParentPortWorkerThread.js"
+import { IWorkerSucessEventHandler } from "../../../../../../shared/data/interfaces/application/workers/events/IWorkerSucessEventHandler.js"
+import { TPostMessageStrucData } from "../../../../../../shared/data/interfaces/application/workers/IParentPortWorker.js"
 import { IFiscalObligationsEventsPackage } from "../../../../../domain/fiscalObligations/IFiscalObligationsEventsPackage.js"
 import { E_WORKER_PROCESS } from "../../../../../domain/fiscalObligations/names.js"
 import { TFiscalOBligationsEntryData } from "../../../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js"
 
-export class WorkerThreadSucessEventHandlerfiscalOBligations implements IWorkerThreadSucessEventHandler<TFiscalOBligationsEntryData> {
+export class WorkerSucessEventHandlerfiscalOBligations implements IWorkerSucessEventHandler<TFiscalOBligationsEntryData> {
   constructor(private fiscalOBligationsEventsPackage: IFiscalObligationsEventsPackage) {}
 
   public async handle(structData: TPostMessageStrucData<TFiscalOBligationsEntryData>): Promise<void> {
-    console.log("WorkerThreadSucessEventHandlerfiscalOBligations: ", structData)
+    // console.log("WorkerSucessEventHandlerfiscalOBligations: ", structData)
     if (structData.identifier === E_WORKER_PROCESS.FISCAL_OBLIGARTIONS_EVENTS_PACKAGE) return this.handlefiscalOBligationsEventsPackage(structData)
   }
 
