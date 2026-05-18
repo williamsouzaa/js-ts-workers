@@ -1,4 +1,4 @@
-export type TEventData = Object
+export type TEventData = Record<string, any>
 
 export type TEventsPackage = {
   lastEventCreatedAt: number;

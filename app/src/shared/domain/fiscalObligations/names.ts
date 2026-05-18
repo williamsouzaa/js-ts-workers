@@ -31,18 +31,14 @@ export enum E_WORKER_PROCESS {
   FISCAL_OBLIGARTIONS_EVENTS_PACKAGE = "fiscalOBligationsEventsPackage"
 }
 
-export enum E_WORKERS_PROCESS_QUEUE {
-  PROCESS_PACKAGE = 'processPackage'
-}
-
 // ============================================================================
 // ============================================================================
 
 export enum E_LAYOUTS_PACKAGE_SIZE {
   EFINANCEIRA_CADASTRO_DECLARANTE = 1,
   EFINANCEIRA_ABERTURA = 1,
-  EFINANCEIRA_MOVIMENTACAO_FINACEIRA = 3,
-  EFINANCEIRA_PREVIDENCIA_PRIVADA = 3,
+  EFINANCEIRA_MOVIMENTACAO_FINACEIRA = 50,
+  EFINANCEIRA_PREVIDENCIA_PRIVADA = 50,
   EFINANCEIRA_FECHAMENTO = 1,
   EFINANCEIRA_EXCLUSAO = 1,
   EFINANCEIRA_CADASTRO_PATROCINADOS = 1,

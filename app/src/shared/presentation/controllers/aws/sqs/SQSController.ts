@@ -17,8 +17,9 @@ export class SQSController implements IQueueController {
   ) {}
 
   public async handle(): Promise<void> {
+    const messages = await this.getBatchMessagesInQueue.getBatchMessages(500)
     try {
-      const messages = await this.getBatchMessagesInQueue.getBatchMessages(5)
+
       if(!messages) return
 
       console.log(`[LOG] - SQSController - handle - messages recebidas: ${messages.length}`)
@@ -35,6 +36,7 @@ export class SQSController implements IQueueController {
 
       await this.fiscalOBligationsOrchestrator.handle(entryDataList)
     } catch (error) {
+      console.log('[LOG][ERROR] - SQSController - handle - messages: ', messages)
       console.log('[LOG][ERROR] - SQSController - handle - erro: ', error)
     }
   }

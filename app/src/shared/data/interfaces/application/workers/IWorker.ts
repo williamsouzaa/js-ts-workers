@@ -1,5 +1,5 @@
 import { ChildProcess } from 'child_process';
-import { TPostMessageStrucData } from "./IParentPortWorker.js";
+import { TWorkerListenerStructData } from "./IWorkerListener.js";
 
 export enum E_WORKER_STATE {
   BUSY = 'BUSY',
@@ -19,6 +19,6 @@ export interface IWorker<TEntryData> {
   workerIsBusy(): boolean
   workerIsOffline(): boolean
   workerIsIdle(): boolean
-  postMessage(structData: TPostMessageStrucData<TEntryData>, bufferData: any): Promise<void>
+  postMessage(structData: TWorkerListenerStructData<TEntryData>, bufferData: any): Promise<void>
 
 }

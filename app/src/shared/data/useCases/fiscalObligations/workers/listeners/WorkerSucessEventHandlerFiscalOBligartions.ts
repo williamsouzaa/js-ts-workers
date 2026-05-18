@@ -1,30 +1,36 @@
 import { IWorkerSucessEventHandler } from "../../../../../../shared/data/interfaces/application/workers/events/IWorkerSucessEventHandler.js"
-import { TPostMessageStrucData } from "../../../../../../shared/data/interfaces/application/workers/IParentPortWorker.js"
 import { IFiscalObligationsEventsPackage } from "../../../../../domain/fiscalObligations/IFiscalObligationsEventsPackage.js"
 import { E_WORKER_PROCESS } from "../../../../../domain/fiscalObligations/names.js"
+import { IDeleteEventsFiscalOBligartionsPackageRepository } from "../../../../../domain/fiscalObligations/repositories/IDeleteEventsFiscalOBligartionsPackageRepository.js"
 import { TFiscalOBligationsEntryData } from "../../../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js"
+import { TWorkerListenerStructData } from "../../../../interfaces/application/workers/IWorkerListener.js"
 
 export class WorkerSucessEventHandlerfiscalOBligations implements IWorkerSucessEventHandler<TFiscalOBligationsEntryData> {
-  constructor(private fiscalOBligationsEventsPackage: IFiscalObligationsEventsPackage) {}
+  constructor(
+    private fiscalOBligationsEventsPackage: IFiscalObligationsEventsPackage,
+    private deleteEventsFiscalOBligartionsPackageRepository: IDeleteEventsFiscalOBligartionsPackageRepository
+  ) {}
 
-  public async handle(structData: TPostMessageStrucData<TFiscalOBligationsEntryData>): Promise<void> {
-    // console.log("WorkerSucessEventHandlerfiscalOBligations: ", structData)
+  public async handle(structData: TWorkerListenerStructData<any>): Promise<void> {
     if (structData.identifier === E_WORKER_PROCESS.FISCAL_OBLIGARTIONS_EVENTS_PACKAGE) return this.handlefiscalOBligationsEventsPackage(structData)
+    console.log('There are new structData.identifier to be implement', structData)
   }
 
-  private async handlefiscalOBligationsEventsPackage(message: TPostMessageStrucData<TFiscalOBligationsEntryData>): Promise<void> {
-    if (!message.fiscalOBligationsEventsPackage) throw new Error("Message queue is undefined in handleQueueMessage")
-
-    if (message.message === "received") return this.handleQueueMessageReceived(message)
-    console.log(`caindo fora da classe aqui - Lidar com isso:`, message.fiscalOBligationsEventsPackage)
+  private async handlefiscalOBligationsEventsPackage(structData: TWorkerListenerStructData<any>): Promise<void> {
+    if (!structData.fiscalOBligationsEventsPackage) throw new Error("Message queue is undefined in handleQueueMessage")
+    if (structData.message === "received") return this.handleQueueMessageReceived(structData)
+    if (structData.message === "processed") return this.handleQueueMessageProcessed(structData)
+    throw new Error('There are new structData.message to be implement')
   }
 
-  private async handleQueueMessageReceived(message: TPostMessageStrucData<TFiscalOBligationsEntryData>): Promise<void> {
-    console.log('handleQueueMessageReceived', message)
-
-    this.fiscalOBligationsEventsPackage.clearEventsInPackage(
-      message.fiscalOBligationsEventsPackage!.packageReference.keyGroup,
-      message.fiscalOBligationsEventsPackage!.packageReference.packageIndex
+  private async handleQueueMessageReceived(structData: TWorkerListenerStructData<TFiscalOBligationsEntryData>): Promise<void> {
+    this.fiscalOBligationsEventsPackage.deletePackage(
+      structData.fiscalOBligationsEventsPackage!.packageReference.keyGroup,
+      structData.fiscalOBligationsEventsPackage!.packageReference.packageIndex
     )
+  }
+
+  private async handleQueueMessageProcessed(structData: TWorkerListenerStructData<Array<string>>): Promise<void> {
+    await this.deleteEventsFiscalOBligartionsPackageRepository.deleteEvents(structData.fiscalOBligationsEventsPackage?.packageReference!, structData.entryData!)
   }
 }

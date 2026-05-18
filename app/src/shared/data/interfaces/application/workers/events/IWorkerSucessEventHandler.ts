@@ -1,5 +1,6 @@
-import { TPostMessageStrucData } from "../IParentPortWorker.js";
+import { TWorkerListenerStructData } from "../IWorkerListener.js";
+
 
 export interface IWorkerSucessEventHandler<TEntryData> {
-  handle(structData: TPostMessageStrucData<TEntryData>): Promise<void>
+  handle(structData: TWorkerListenerStructData<TEntryData>): Promise<void>
 }

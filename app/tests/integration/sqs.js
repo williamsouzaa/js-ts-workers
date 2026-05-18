@@ -49,13 +49,15 @@ async function iniciarProdutor() {
       const hoje = new Date();
 
       for (let i = 0; i < quantidade; i++) {
+        const mes =  Math.floor(Math.random() * 12) + 1
+        const ano = hoje.getFullYear()
         const seq = fakerPT_BR.number.int({ min: 1, max: 999999999 });
         const payload = {
-          id: `ID${String(seq).padStart(13, '0')}`,
+          id: `ID${ano}${mes}${String(seq).padStart(11, '0')}`,
           obrigacao: 'efinanceira',
           codLayout: '003',
-          ano: hoje.getFullYear(),
-          mes: Math.floor(Math.random() * 12) + 1,
+          ano,
+          mes,
           cnpjEmpresa: '12345678000199', // CNPJ Fake de teste
           evento: JSON.stringify(gerarEvtMovOpFin())
         };

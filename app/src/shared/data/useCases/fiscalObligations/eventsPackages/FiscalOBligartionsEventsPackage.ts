@@ -15,7 +15,6 @@ export class FiscalOBligationsEventsPackage implements IFiscalObligationsEventsP
 
   public addItem(keyGroup: string, eventId: string, data: any, customLimitPackage: number | undefined): TEventDetails {
     const currentTs = Date.now()
-
     const limitPackageSize = !!customLimitPackage ? customLimitPackage : this.limitPerPackage
 
     if (!this.events.has(keyGroup)) {
@@ -33,7 +32,7 @@ export class FiscalOBligationsEventsPackage implements IFiscalObligationsEventsP
     const group = this.events.get(keyGroup)
     const lastPackage = group!.package.get(group!.lastPackageId)
 
-    if (lastPackage!.events.size <= this.limitPerPackage) {
+    if (!!lastPackage && lastPackage!.events.size < this.limitPerPackage && lastPackage!.status === E_EVENT_PACKAGE_STATUS.STACKING) {
       lastPackage!.lastEventCreatedAt = currentTs
       lastPackage!.events.set(eventId, data)
       return { keyGroup, package: { lastPackageId: group!.lastPackageId, eventId, lastEventCreatedAt: currentTs, data } }

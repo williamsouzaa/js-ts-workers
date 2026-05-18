@@ -4,8 +4,8 @@ import { IFiscalObligationsEventsPackage, TPackageReference } from "../../../dom
 import { E_WORKER_PROCESS, E_OBRIGACAO, E_OBRIGACAO_CODIGO_LAYOUT, E_LAYOUTS_PACKAGE_SIZE } from "../../../domain/fiscalObligations/names.js"
 import { IWritefiscalOBligationsPackageRepository } from "../../../domain/fiscalObligations/repositories/IWriteFiscalOBligartionsPackageRepository.js"
 import { TFiscalOBligationsEntryData } from "../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js"
-import { TPostMessageStrucData } from "../../interfaces/application/workers/IParentPortWorker.js"
 import { IWorker } from "../../interfaces/application/workers/IWorker.js"
+import { TWorkerListenerStructData } from "../../interfaces/application/workers/IWorkerListener.js"
 import { IWorkersPool } from "../../interfaces/application/workers/IWorkersPool.js"
 
 export class FiscalOBligationsOrchestrator {
@@ -18,57 +18,66 @@ export class FiscalOBligationsOrchestrator {
   }
 
   public async handle(entryDataList: Array<TFiscalOBligationsEntryData>, reprocessing: boolean = false): Promise<void> {
-    if (!reprocessing) await this.handleToAddElementInPackageAndPersist(entryDataList)
+    try {
+      if (!reprocessing) await this.handleToAddElementInPackageAndPersist(entryDataList)
 
-    const packagesExpired: Array<TPackageReference> = this.fiscalOBligationsEventsPackage.getPackagesWithTimeLimitExpired()
-    const packageAlredyFoProcess: Array<TPackageReference> = this.fiscalOBligationsEventsPackage.collectPackagesAlredyForProcess()
-    const packagerToProcess: Array<TPackageReference> = [...packagesExpired, ...packageAlredyFoProcess]
-    if (packagerToProcess.length === 0) return
+      const packagesExpired: Array<TPackageReference> = this.fiscalOBligationsEventsPackage.getPackagesWithTimeLimitExpired()
+      const packageAlredyFoProcess: Array<TPackageReference> = this.fiscalOBligationsEventsPackage.collectPackagesAlredyForProcess()
+      const packagerToProcess: Array<TPackageReference> = [...packagesExpired, ...packageAlredyFoProcess]
+      if (packagerToProcess.length === 0) return
 
-    const totalWorkers = this.workerThreadManager.workerThreadsPool.size
-    const packagePartsToProcess = this.brokePackagesToParts(packagerToProcess, totalWorkers)
+      const totalWorkers = this.workerThreadManager.workerThreadsPool.size
+      const packagePartsToProcess = this.brokePackagesToParts(packagerToProcess, totalWorkers)
 
-    for (let i = 0; i < totalWorkers; i++) {
-      const packagePart = packagePartsToProcess[i]
-      const workerThread = this.workerThreadManager.workerThreadsPool.get(i)
-      if (!packagePart || !workerThread) throw new Error("Erro ao distribuir os pacotes para os workers.")
-      await this.awaitWorkerIsIdle(workerThread)
+      for (let i = 0; i < totalWorkers; i++) {
+        const packagePart = packagePartsToProcess[i]
+        const workerThread = this.workerThreadManager.workerThreadsPool.get(i)
+        if (!packagePart || !workerThread) throw new Error("Erro ao distribuir os pacotes para os workers.")
+        await this.awaitWorkerIsIdle(workerThread)
 
-      for (const { keyGroup, packageIndex } of packagePart) {
-        const packageToProcess = this.fiscalOBligationsEventsPackage.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
+        for (const { keyGroup, packageIndex } of packagePart) {
+          const packageToProcess = this.fiscalOBligationsEventsPackage.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
 
-        if (!packageToProcess) continue
-        const structData = {
-          identifier: E_WORKER_PROCESS.FISCAL_OBLIGARTIONS_EVENTS_PACKAGE,
-          fiscalOBligationsEventsPackage: { packageReference: {keyGroup, packageIndex} },
-          worker: { id: workerThread.id },
-          message: "mainThread"
-        } as TPostMessageStrucData<TFiscalOBligationsEntryData>
+          if (!packageToProcess) continue
+          const structData = {
+            identifier: E_WORKER_PROCESS.FISCAL_OBLIGARTIONS_EVENTS_PACKAGE,
+            fiscalOBligationsEventsPackage: { packageReference: {keyGroup, packageIndex} },
+            worker: { id: workerThread.id },
+            message: "mainThread"
+          } as TWorkerListenerStructData<TFiscalOBligationsEntryData>
 
-        const events = []
-        for (const [_, event] of packageToProcess.events) {
-          events.push(event)
+          const events = []
+          for (const [_, event] of packageToProcess.events) {
+            events.push(event)
+          }
+
+          workerThread.postMessage(structData, events)
         }
-
-        workerThread.postMessage(structData, events)
       }
+    } catch(error) {
+      console.log('FiscalOBligationsOrchestrator - handle - error', error)
     }
   }
 
 
   private async handleToAddElementInPackageAndPersist(entryDataList: Array<TFiscalOBligationsEntryData>): Promise<void> {
-    const dataPackageToPersist = new Array()
-    for (const entryData of entryDataList) {
-      const entryDataString = JSON.stringify(entryData)
-      const eventDetails = this.fiscalOBligationsEventsPackage.addItem(
-        this.createKeyGroup(entryData),
-        this.getEventId(entryData),
-        entryDataString,
-        this.getPackageSizeByCodeDynamic(entryData)
-      )
-      dataPackageToPersist.push({entryDataString: entryDataString, eventDetails})
+    try {
+      const dataPackageToPersist = new Array()
+      for (const entryData of entryDataList) {
+        const entryDataString = JSON.stringify(entryData)
+        const eventDetails = this.fiscalOBligationsEventsPackage.addItem(
+          this.createKeyGroup(entryData),
+          this.getEventId(entryData),
+          entryDataString,
+          this.getPackageSizeByCodeDynamic(entryData)
+        )
+        dataPackageToPersist.push({entryDataString: entryDataString, eventDetails})
+      }
+      await this.writefiscalOBligationsPackageRepository.writePackage(dataPackageToPersist)
+    }catch(error) {
+      console.log('FiscalOBligationsOrchestrator - handleToAddElementInPackageAndPersist - entryDataList', entryDataList)
+      console.log('FiscalOBligationsOrchestrator - handleToAddElementInPackageAndPersist - error', error)
     }
-    await this.writefiscalOBligationsPackageRepository.writePackage(dataPackageToPersist)
   }
 
   private getPackageSizeByCodeDynamic(entryData: TFiscalOBligationsEntryData): number | undefined {

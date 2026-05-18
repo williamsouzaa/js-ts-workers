@@ -3,7 +3,7 @@ import { IWorkerErrorEventHandler } from "../../../interfaces/application/worker
 import { IWorkerExitEventHandler } from "../../../interfaces/application/workers/events/IWorkerExitEventHandler.js"
 import { IWorkerSucessEventHandler } from "../../../interfaces/application/workers/events/IWorkerSucessEventHandler.js"
 import { IWorker, E_WORKER_STATE } from "../../../interfaces/application/workers/IWorker.js"
-import { TPostMessageStrucData } from '../../../interfaces/application/workers/IParentPortWorker.js';
+import { TWorkerListenerStructData } from '../../../interfaces/application/workers/IWorkerListener.js';
 
 export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
   private _id!: number
@@ -36,7 +36,7 @@ export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
       env: { ...process.env, WORKER_NAME: name, WORKER_ID: String(id) }
     })
 
-    this._worker.on('message', async (structData: TPostMessageStrucData<TEntryData>) => await this.handleSuccessEvent(structData))
+    this._worker.on('message', async (structData: TWorkerListenerStructData<TEntryData>) => await this.handleSuccessEvent(structData))
     this._worker.on('error',   async (erro: any)  => await this.handleErrorEvent(erro))
     this._worker.on('exit',    async (code: any)   => await this.handleExitEvent(code))
   }
@@ -46,7 +46,7 @@ export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
   public workerIsOffline(): boolean { return this._state === E_WORKER_STATE.OFFLINE }
   public workerIsIdle(): boolean    { return this._state === E_WORKER_STATE.IDLE }
 
-  public async postMessage(structData: TPostMessageStrucData<TEntryData>, bufferData: any): Promise<void> {
+  public async postMessage(structData: TWorkerListenerStructData<TEntryData>, bufferData: any): Promise<void> {
     if (this._state !== E_WORKER_STATE.IDLE) return
 
     Array.isArray(bufferData)
@@ -58,7 +58,7 @@ export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
 
   // child_process IPC serialises via JSON, so ArrayBuffer transfer is not available.
   // We encode each binary chunk as a base64 string; the child decodes it back.
-  private async handleToPostMessageListToWorker(structData: TPostMessageStrucData<TEntryData>, bufferData: any): Promise<void> {
+  private async handleToPostMessageListToWorker(structData: TWorkerListenerStructData<TEntryData>, bufferData: any): Promise<void> {
     const binaryDataList: string[] = []
     for (const el of bufferData) {
       const uint8ArrayData: Uint8Array = typeof el === 'string'
@@ -69,7 +69,7 @@ export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
     this._worker.send({ ...structData, binaryData: binaryDataList, _encoding: 'base64list' })
   }
 
-  private async handleToPostMessage(structData: TPostMessageStrucData<TEntryData>, bufferData: any): Promise<void> {
+  private async handleToPostMessage(structData: TWorkerListenerStructData<TEntryData>, bufferData: any): Promise<void> {
     const uint8ArrayData: Uint8Array = typeof bufferData === 'string'
       ? new TextEncoder().encode(bufferData)
       : new TextEncoder().encode(JSON.stringify(bufferData))
@@ -94,7 +94,7 @@ export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
     this.handleStateWorker()
   }
 
-  private async handleSuccessEvent(structData: TPostMessageStrucData<TEntryData>): Promise<void> {
+  private async handleSuccessEvent(structData: TWorkerListenerStructData<TEntryData>): Promise<void> {
     this.subtractOneFromTheCurrentLoad()
     await this.sucessEventHandler.handle(structData)
   }

@@ -13,6 +13,9 @@ import { WorkerFiscalOBligations } from "../../../../../shared/data/useCases/fis
 import { WorkerPoolFiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/WorkerPoolFiscalOBligartions.js"
 import { WorkerErrorEventHandler } from "../../../../../shared/data/useCases/application/workers/listeners/events/WorkerErrorEventHandler.js"
 import { WorkerExitEventHandler } from "../../../../../shared/data/useCases/application/workers/listeners/events/WorkerExitEventHandler.js"
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import https from "https";
+import http from "http";
 
 function getfiscalOBligationsEventsPackageFactory(): IFiscalObligationsEventsPackage {
   const fiscalOBligationsEventsPackage = new FiscalOBligationsEventsPackage()
@@ -21,6 +24,8 @@ function getfiscalOBligationsEventsPackageFactory(): IFiscalObligationsEventsPac
   return fiscalOBligationsEventsPackage
 }
 
+
+
 function getInstanceAwsSkdSqsClient(): SQSClient {
   return new SQSClient({
     region: "us-east-1",
@@ -28,7 +33,17 @@ function getInstanceAwsSkdSqsClient(): SQSClient {
     credentials: {
       accessKeyId: "test",
       secretAccessKey: "test"
-    }
+    },
+    requestHandler:  new NodeHttpHandler({
+      httpsAgent: new https.Agent({
+        maxSockets: 500,
+        keepAlive: true
+      }),
+      httpAgent: new http.Agent({
+        maxSockets: 500,
+        keepAlive: true
+      })
+    })
   })
 }
 
@@ -40,7 +55,10 @@ export async function sqsQueueEfinanceiraFactory(): Promise<IQueueController> {
   const fiscalOBligationsEventsPackage = getfiscalOBligationsEventsPackageFactory()
 
   const workerThreadManager = new WorkerPoolFiscalOBligations(() => new WorkerFiscalOBligations(
-      new WorkerSucessEventHandlerfiscalOBligations(fiscalOBligationsEventsPackage),
+      new WorkerSucessEventHandlerfiscalOBligations(
+        fiscalOBligationsEventsPackage,
+        new RedisfiscalOBligationsPackageRepositoryAdapter()
+      ),
       new WorkerErrorEventHandler(),
       new WorkerExitEventHandler(),
   ))
@@ -58,5 +76,4 @@ export async function sqsQueueEfinanceiraFactory(): Promise<IQueueController> {
       new RedisfiscalOBligationsPackageRepositoryAdapter()
     )
   )
-
 }
