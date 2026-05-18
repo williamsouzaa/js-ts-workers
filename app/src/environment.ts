@@ -13,6 +13,16 @@ export const REDIS = {
   PORT: parseInt(process.env.DATABASE_REDIS_PORT as string, 10) || isRequired('DATABASE_REDIS_PORT'),
 }
 
+export const AWS_SQS = {
+  EFINANCEIRA: {
+    INPUT: {
+      URL: process.env.AWS_SQS_QUEUE_INPUT_URL_EFINANCEIRA as string || isRequired("AWS_SQS_QUEUE_INPUT_URL_EFINANCEIRA"),
+      AWS_SQS_MAX_SOCKETS_REQUEST: 500
+    },
+    OUTPUT: {},
+  }
+}
+
 export const EFINANCEIRA = {
   CERT_THUMBPRINT : NODE_ENV === 'PROD' ? "33ff3179bda29a7e25daa52631defc19d1105b2d" : "cc242988a739caa7757b29e2a900ae35519cdb39",
 

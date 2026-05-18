@@ -1,8 +1,6 @@
-
-
 import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IGetBatchMessagesInQueue.js";
 import { TQueueMessage } from "../../../../data/interfaces/application/queue/TQueueMessage.js";
-import { FiscalOBligationsOrchestrator } from "../../../../data/useCases/fiscalObligations/FiscalObligartionsOrchestrator.js";
+import { FiscalOBligationsOrchestrator } from "../../../../data/useCases/fiscalObligations/FiscalObligationsOrchestrator.js";
 import { TFiscalOBligationsEntryData } from "../../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js";
 import { IBuildEntryData } from "../../../../domain/IBuildEntryData.js";
 import { IQueueController, EQueueController } from "../../../interfaces/queue/IQueueController.js";
@@ -17,7 +15,7 @@ export class SQSController implements IQueueController {
   ) {}
 
   public async handle(): Promise<void> {
-    const messages = await this.getBatchMessagesInQueue.getBatchMessages(2500)
+    const messages = await this.getBatchMessagesInQueue.getBatchMessages(1000)
     try {
       if(!messages) return
 

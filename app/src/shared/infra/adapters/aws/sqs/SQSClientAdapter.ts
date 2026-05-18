@@ -11,9 +11,11 @@ export class SQSClientAdapter implements IGetBatchMessagesInQueue, IDeleteBatchM
   private awsSQSQueueUrl!: string
 
   public setAWSClientSQS(maxSockets: number = 50): void {
+    if(!this.awsSQSQueueUrl) throw new Error("setAWSSQSQueueUrl should be declared first")
+
     this.awsClientSQS =  new SQSClient({
       region: "us-east-1",
-      endpoint: process.env.AWS_SQS_QUEUE_ENDPOINT_EFINANCEIRA as string,
+      endpoint: this.awsSQSQueueUrl,
       credentials: {
         accessKeyId: "test",
         secretAccessKey: "test"

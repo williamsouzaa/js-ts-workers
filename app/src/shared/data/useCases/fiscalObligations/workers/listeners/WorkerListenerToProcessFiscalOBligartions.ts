@@ -13,23 +13,13 @@ import { EfinanceiraXmlSigner } from "../../../../../../modules/efinanceira/data
 import { EfinanceiraCreateBatchEvents } from "../../../../../../modules/efinanceira/data/useCases/craeteBatch/EfinanceiraCreateBatchEvents.js"
 import { SQSClientAdapter } from "../../../../../infra/adapters/aws/sqs/SQSClientAdapter.js"
 import { SQSClient } from "@aws-sdk/client-sqs"
+import { AWS_SQS, EFINANCEIRA } from "../../../../../../environment.js"
 
-
-function getInstanceAwsSkdSqsClient(): SQSClient {
-  return new SQSClient({
-    region: "us-east-1",
-    endpoint: process.env.AWS_SQS_QUEUE_ENDPOINT_EFINANCEIRA as string,
-    credentials: {
-      accessKeyId: "test",
-      secretAccessKey: "test"
-    }
-  })
-}
 
 async function efinanceiraProcesssPackageListenerFactory(): Promise<EfinanceiraProcesssPackageListener> {
   const sqsObrigacaoEfinanceira = new SQSClientAdapter()
-  sqsObrigacaoEfinanceira.setAWSSQSQueueUrl(process.env.AWS_SQS_QUEUE_URL_EFINANCEIRA as string)
-  sqsObrigacaoEfinanceira.setAWSClientSQS(500)
+  sqsObrigacaoEfinanceira.setAWSSQSQueueUrl(AWS_SQS.EFINANCEIRA.INPUT.URL)
+  sqsObrigacaoEfinanceira.setAWSClientSQS(AWS_SQS.EFINANCEIRA.INPUT.AWS_SQS_MAX_SOCKETS_REQUEST)
 
   return new EfinanceiraProcesssPackageListener(
       [

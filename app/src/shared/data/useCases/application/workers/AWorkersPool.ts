@@ -1,5 +1,5 @@
 import os from 'os'
-import { E_WORKER_STATE, IWorker } from "../../../interfaces/application/workers/IWorker.js"
+import { IWorker } from "../../../interfaces/application/workers/IWorker.js"
 import { IWorkersPool } from '../../../interfaces/application/workers/IWorkersPool.js'
 
 
@@ -11,7 +11,7 @@ export abstract class AWorkersPool<EntryData> implements IWorkersPool<EntryData>
   public async init(filePath: `./dist/${string}.js`, turnOnQuantity: number | null = null): Promise<void> {
     if (!turnOnQuantity) {
         const totalCores = os.cpus().length
-        turnOnQuantity = totalCores - 1
+        turnOnQuantity = totalCores - 2
       }
 
       for (let i = 0; i < turnOnQuantity; i++) {

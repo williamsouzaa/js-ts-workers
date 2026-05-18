@@ -14,7 +14,6 @@ export enum E_OBRIGACAO_CODIGO_LAYOUT {
 }
 
 // ============================================================================
-// ============================================================================
 
 export enum E_OBRIGACAO {
   E_FINANCEIRA = 'efinanceira',
@@ -23,15 +22,12 @@ export enum E_OBRIGACAO {
   NFSE         = 'nota_fiscal_eletronica'
 }
 
-
-// ============================================================================
 // ============================================================================
 
 export enum E_WORKER_PROCESS {
   FISCAL_OBLIGARTIONS_EVENTS_PACKAGE = "fiscalOBligationsEventsPackage"
 }
 
-// ============================================================================
 // ============================================================================
 
 export enum E_LAYOUTS_PACKAGE_SIZE {

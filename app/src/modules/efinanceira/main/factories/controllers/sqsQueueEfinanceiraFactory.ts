@@ -1,11 +1,10 @@
-import { SQSClient } from "@aws-sdk/client-sqs"
 import { SQSClientAdapter } from "../../../../../shared/infra/adapters/aws/sqs/SQSClientAdapter.js"
 import { SQSController } from "../../../../../shared/presentation/controllers/aws/sqs/SQSController.js"
 import { IQueueController } from "../../../../../shared/presentation/interfaces/queue/IQueueController.js"
 import { sleep } from "../../../../../utils/sleep.js"
 import { BuildEntryDataFromSQSMessage } from "../../../../../shared/data/useCases/fiscalObligations/entryData/BuildEntryDataFromSQSMessage.js"
 import { FiscalOBligationsEventsPackage } from "../../../../../shared/data/useCases/fiscalObligations/eventsPackages/FiscalOBligartionsEventsPackage.js"
-import { FiscalOBligationsOrchestrator } from "../../../../../shared/data/useCases/fiscalObligations/FiscalObligartionsOrchestrator.js"
+import { FiscalOBligationsOrchestrator } from "../../../../../shared/data/useCases/fiscalObligations/FiscalObligationsOrchestrator.js"
 import { IFiscalObligationsEventsPackage } from "../../../../../shared/domain/fiscalObligations/IFiscalObligationsEventsPackage.js"
 import { RedisfiscalOBligationsPackageRepositoryAdapter } from "../../../../../shared/infra/databases/repositories/redis/RedisFiscalOBligartionsPackageRepositoryAdapter.js"
 import { WorkerSucessEventHandlerfiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/listeners/WorkerSucessEventHandlerFiscalOBligartions.js"
@@ -13,6 +12,7 @@ import { WorkerFiscalOBligations } from "../../../../../shared/data/useCases/fis
 import { WorkerPoolFiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/WorkerPoolFiscalOBligartions.js"
 import { WorkerErrorEventHandler } from "../../../../../shared/data/useCases/application/workers/listeners/events/WorkerErrorEventHandler.js"
 import { WorkerExitEventHandler } from "../../../../../shared/data/useCases/application/workers/listeners/events/WorkerExitEventHandler.js"
+import { AWS_SQS } from "../../../../../environment.js"
 
 
 function getfiscalOBligationsEventsPackageFactory(): IFiscalObligationsEventsPackage {
@@ -24,8 +24,8 @@ function getfiscalOBligationsEventsPackageFactory(): IFiscalObligationsEventsPac
 
 export async function sqsQueueEfinanceiraFactory(): Promise<IQueueController> {
   const sqsObrigacaoEfinanceira = new SQSClientAdapter()
-  sqsObrigacaoEfinanceira.setAWSSQSQueueUrl(process.env.AWS_SQS_QUEUE_URL_EFINANCEIRA as string)
-  sqsObrigacaoEfinanceira.setAWSClientSQS(500)
+  sqsObrigacaoEfinanceira.setAWSSQSQueueUrl(AWS_SQS.EFINANCEIRA.INPUT.URL)
+  sqsObrigacaoEfinanceira.setAWSClientSQS(AWS_SQS.EFINANCEIRA.INPUT.AWS_SQS_MAX_SOCKETS_REQUEST)
 
   const fiscalOBligationsEventsPackage = getfiscalOBligationsEventsPackageFactory()
 

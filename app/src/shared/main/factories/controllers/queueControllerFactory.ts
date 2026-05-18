@@ -3,5 +3,4 @@ import { IQueueController } from "../../../presentation/interfaces/queue/IQueueC
 
 export async function queueControllerFactory(): Promise<Array<IQueueController>> {
   return [await sqsQueueEfinanceiraFactory()]
-
 }

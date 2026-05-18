@@ -2,9 +2,8 @@ import { fork, ChildProcess } from 'child_process';
 import { IWorkerErrorEventHandler } from "../../../interfaces/application/workers/events/IWorkerErrorEventHandler.js"
 import { IWorkerExitEventHandler } from "../../../interfaces/application/workers/events/IWorkerExitEventHandler.js"
 import { IWorkerSucessEventHandler } from "../../../interfaces/application/workers/events/IWorkerSucessEventHandler.js"
-import { IWorker, E_WORKER_STATE } from "../../../interfaces/application/workers/IWorker.js"
+import { IWorker } from "../../../interfaces/application/workers/IWorker.js"
 import { TWorkerListenerStructData } from '../../../interfaces/application/workers/IWorkerListener.js';
-import { SCHED_RR } from 'cluster';
 
 export abstract class AWorker<TEntryData> implements IWorker<TEntryData> {
   public id!: number

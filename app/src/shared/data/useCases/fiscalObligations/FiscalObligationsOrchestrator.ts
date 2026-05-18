@@ -4,7 +4,6 @@ import { IFiscalObligationsEventsPackage, TPackageReference } from "../../../dom
 import { E_WORKER_PROCESS, E_OBRIGACAO, E_OBRIGACAO_CODIGO_LAYOUT, E_LAYOUTS_PACKAGE_SIZE } from "../../../domain/fiscalObligations/names.js"
 import { IWritefiscalOBligationsPackageRepository } from "../../../domain/fiscalObligations/repositories/IWriteFiscalOBligartionsPackageRepository.js"
 import { TFiscalOBligationsEntryData } from "../../../domain/fiscalObligations/TFiscalOBligartionsEntryData.js"
-import { IWorker } from "../../interfaces/application/workers/IWorker.js"
 import { TWorkerListenerStructData } from "../../interfaces/application/workers/IWorkerListener.js"
 import { IWorkersPool } from "../../interfaces/application/workers/IWorkersPool.js"
 
@@ -46,9 +45,7 @@ export class FiscalOBligationsOrchestrator {
           } as TWorkerListenerStructData<TFiscalOBligationsEntryData>
 
           const events = []
-          for (const [_, event] of packageToProcess.events) {
-            events.push(event)
-          }
+          for (const [_, event] of packageToProcess.events) events.push(event)
           await workerThread.postMessage(structData, events)
         }
       }
@@ -56,7 +53,6 @@ export class FiscalOBligationsOrchestrator {
       console.log('FiscalOBligationsOrchestrator - handle - error', error)
     }
   }
-
 
   private async handleToAddElementInPackageAndPersist(entryDataList: Array<TFiscalOBligationsEntryData>): Promise<void> {
     try {
@@ -79,20 +75,21 @@ export class FiscalOBligationsOrchestrator {
   }
 
   private getPackageSizeByCodeDynamic(entryData: TFiscalOBligationsEntryData): number | undefined {
-    let code = null
-    if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) code = entryData.event.efinanceira!.codLayout
+    const { obrigacao, efinanceira } = entryData.event;
 
-    const chaveDoEnum = Object.keys(E_OBRIGACAO_CODIGO_LAYOUT).find(
-      (key) => E_OBRIGACAO_CODIGO_LAYOUT[key as keyof typeof E_OBRIGACAO_CODIGO_LAYOUT] === code
-    ) as keyof typeof E_LAYOUTS_PACKAGE_SIZE | undefined;
+    if (obrigacao !== E_OBRIGACAO.E_FINANCEIRA || !efinanceira?.codLayout) return undefined;
+    const targetCode = efinanceira.codLayout;
 
-    if (chaveDoEnum && chaveDoEnum in E_LAYOUTS_PACKAGE_SIZE) return E_LAYOUTS_PACKAGE_SIZE[chaveDoEnum];
-    return undefined;
+    const layoutMatch = Object.entries(E_OBRIGACAO_CODIGO_LAYOUT).find(([_, value]) => value === targetCode);
+    if (!layoutMatch) return undefined;
+
+    const layoutKey = layoutMatch[0] as keyof typeof E_LAYOUTS_PACKAGE_SIZE;
+    return E_LAYOUTS_PACKAGE_SIZE[layoutKey];
   }
 
   private getEventId(entryData: TFiscalOBligationsEntryData): string {
     if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) return entryData.event.efinanceira!.idGov
-    throw new Error('Layout ainda nao implementado')
+    throw new Error('getEventId - Layout not implemented')
   }
 
   private createKeyGroup(entryData: TFiscalOBligationsEntryData): string {
