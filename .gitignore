@@ -8,3 +8,5 @@ TODO
 TODO.txt
 dist
 .metals/
+localstack_data
+./localstack_data
