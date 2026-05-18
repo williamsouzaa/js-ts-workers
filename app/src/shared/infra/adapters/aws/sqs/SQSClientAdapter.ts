@@ -2,13 +2,35 @@ import { SQSClient, ReceiveMessageCommand, ReceiveMessageCommandOutput, DeleteMe
 import { IDeleteBatchMessagesInQueue, TParamDeleteBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IDeleteBatchMessagesInQueue.js";
 import { IGetBatchMessagesInQueue } from "../../../../data/interfaces/application/queue/IGetBatchMessagesInQueue.js";
 import { TQueueMessage } from "../../../../data/interfaces/application/queue/TQueueMessage.js";
-
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import https from "https";
+import http from "http";
 
 export class SQSClientAdapter implements IGetBatchMessagesInQueue, IDeleteBatchMessagesInQueue {
-  awsClientSQS!: SQSClient
-  awsSQSQueueUrl!: string
+  private awsClientSQS!: SQSClient
+  private awsSQSQueueUrl!: string
 
-  public setAWSClientSQS(client: SQSClient): void { this.awsClientSQS = client }
+  public setAWSClientSQS(maxSockets: number = 50): void {
+    this.awsClientSQS =  new SQSClient({
+      region: "us-east-1",
+      endpoint: process.env.AWS_SQS_QUEUE_ENDPOINT_EFINANCEIRA as string,
+      credentials: {
+        accessKeyId: "test",
+        secretAccessKey: "test"
+      },
+      requestHandler:  new NodeHttpHandler({
+        httpsAgent: new https.Agent({
+          maxSockets,
+          keepAlive: true
+        }),
+        httpAgent: new http.Agent({
+          maxSockets,
+          keepAlive: true
+        })
+      })
+    })
+  }
+
   public setAWSSQSQueueUrl(data: string): void { this.awsSQSQueueUrl = data }
 
   async getBatchMessages(batchNumberMessages: number): Promise<Array<TQueueMessage> | null> {
@@ -47,43 +69,50 @@ export class SQSClientAdapter implements IGetBatchMessagesInQueue, IDeleteBatchM
   }
 
   public async deleteMessagesBatch(messagesToDelete: Array<TParamDeleteBatchMessagesInQueue>): Promise<void | Error> {
-    const batchOfTenMessages: Array<Array<TParamDeleteBatchMessagesInQueue>> = new Array()
-    for (let index = 0; index < messagesToDelete.length; index++) {
-      batchOfTenMessages.push(messagesToDelete.slice(index, index + 10))
+    if (!messagesToDelete || messagesToDelete.length === 0) return;
+
+    const batchesOfTen: Array<Array<TParamDeleteBatchMessagesInQueue>> = [];
+    for (let index = 0; index < messagesToDelete.length; index += 10) {
+      batchesOfTen.push(messagesToDelete.slice(index, index + 10));
     }
 
-    for (const batchMessage of batchOfTenMessages) {
-      if (messagesToDelete.length === 0 || messagesToDelete.length > 10) {
-        throw new Error("O lote de deleção deve ter entre 1 e 10 mensagens.");
-      }
+    const MAX_CONCURRENT_REQUESTS = 50;
+    let hasError = false;
 
-      const entries = batchMessage.map((msg) => ({
-        Id: msg.messageId,
-        ReceiptHandle: msg.receiptId
-      }))
+    for (let i = 0; i < batchesOfTen.length; i += MAX_CONCURRENT_REQUESTS) {
+      const currentConcurrentBatches = batchesOfTen.slice(i, i + MAX_CONCURRENT_REQUESTS);
 
-      try {
-        const command = new DeleteMessageBatchCommand({
-          QueueUrl: this.awsSQSQueueUrl,
-          Entries: entries,
-        });
+      const promisesDeDelecao = currentConcurrentBatches.map(async (batchMessage) => {
+        const entries = batchMessage.map((msg) => ({
+          Id: msg.messageId,
+          ReceiptHandle: msg.receiptId
+        }));
 
-        const response = await this.awsClientSQS.send(command)
+        try {
+          const command = new DeleteMessageBatchCommand({
+            QueueUrl: this.awsSQSQueueUrl,
+            Entries: entries,
+          });
 
-        if (response.Failed && response.Failed.length > 0) {
-          for (const el in response.Failed) {
-            console.log('[LOG][FAILED] - deleteMessagesBatch - response.Failed - el: ', el)
+          const response = await this.awsClientSQS.send(command);
+
+          if (response.Failed && response.Failed.length > 0) {
+            response.Failed.forEach(falha => {
+               console.log(`[LOG][FAILED] - SQS falhou ao deletar MsgId: ${falha.Id} - Motivo: ${falha.Message}`);
+            });
+            hasError = true;
           }
-          return new Error('Erro ao tentar deletar mensagens')
+
+        } catch (error) {
+          console.error("[LOG][ERROR] - SQSClientAdapter - Falha na requisição de delete:", error);
+          hasError = true;
         }
+      });
 
-        if (response.Successful && response.Successful.length > 0) return
-
-        return new Error('Error ao deletar batch de mensagens')
-      } catch (error) {
-        console.error("[LOG][ERROR] - SQSClientAdapter - deleteMessagesBatch - error:", error);
-        return new Error('Error ao deletar batch de mensagens')
-      }
+      await Promise.all(promisesDeDelecao);
+    }
+    if (hasError) {
+      return new Error('Ocorreram erros parciais ou totais ao deletar os lotes. Verifique os logs.');
     }
   }
 }

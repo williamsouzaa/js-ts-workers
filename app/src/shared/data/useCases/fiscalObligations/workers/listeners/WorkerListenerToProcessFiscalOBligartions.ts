@@ -29,7 +29,7 @@ function getInstanceAwsSkdSqsClient(): SQSClient {
 async function efinanceiraProcesssPackageListenerFactory(): Promise<EfinanceiraProcesssPackageListener> {
   const sqsObrigacaoEfinanceira = new SQSClientAdapter()
   sqsObrigacaoEfinanceira.setAWSSQSQueueUrl(process.env.AWS_SQS_QUEUE_URL_EFINANCEIRA as string)
-  sqsObrigacaoEfinanceira.setAWSClientSQS(getInstanceAwsSkdSqsClient())
+  sqsObrigacaoEfinanceira.setAWSClientSQS(500)
 
   return new EfinanceiraProcesssPackageListener(
       [

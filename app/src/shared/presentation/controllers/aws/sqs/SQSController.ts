@@ -17,12 +17,11 @@ export class SQSController implements IQueueController {
   ) {}
 
   public async handle(): Promise<void> {
-    const messages = await this.getBatchMessagesInQueue.getBatchMessages(500)
+    const messages = await this.getBatchMessagesInQueue.getBatchMessages(2500)
     try {
-
       if(!messages) return
 
-      console.log(`[LOG] - SQSController - handle - messages recebidas: ${messages.length}`)
+      console.log(`[LOG] - SQSController - handle - messages recebidas: ${messages.length} -> ${new Date()}`)
 
       const entryDataList = new Array()
       for (const message of messages) {

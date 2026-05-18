@@ -11,10 +11,10 @@ import { IWorkersPool } from "../../interfaces/application/workers/IWorkersPool.
 export class FiscalOBligationsOrchestrator {
   constructor(
     private fiscalOBligationsEventsPackage: IFiscalObligationsEventsPackage,
-    private workerThreadManager: IWorkersPool<TFiscalOBligationsEntryData>,
+    private workersPool: IWorkersPool<TFiscalOBligationsEntryData>,
     private writefiscalOBligationsPackageRepository: IWritefiscalOBligationsPackageRepository
   ) {
-    setInterval(() => this.handle([], false), 5000)
+    setInterval(() => this.handle([], false), 1000 * 60)
   }
 
   public async handle(entryDataList: Array<TFiscalOBligationsEntryData>, reprocessing: boolean = false): Promise<void> {
@@ -26,14 +26,13 @@ export class FiscalOBligationsOrchestrator {
       const packagerToProcess: Array<TPackageReference> = [...packagesExpired, ...packageAlredyFoProcess]
       if (packagerToProcess.length === 0) return
 
-      const totalWorkers = this.workerThreadManager.workerThreadsPool.size
+      const totalWorkers = this.workersPool.workerThreadsPool.size
       const packagePartsToProcess = this.brokePackagesToParts(packagerToProcess, totalWorkers)
 
       for (let i = 0; i < totalWorkers; i++) {
         const packagePart = packagePartsToProcess[i]
-        const workerThread = this.workerThreadManager.workerThreadsPool.get(i)
+        const workerThread = this.workersPool.workerThreadsPool.get(i)
         if (!packagePart || !workerThread) throw new Error("Erro ao distribuir os pacotes para os workers.")
-        await this.awaitWorkerIsIdle(workerThread)
 
         for (const { keyGroup, packageIndex } of packagePart) {
           const packageToProcess = this.fiscalOBligationsEventsPackage.getAndUpdateStatusPackagesToProcessing(keyGroup, packageIndex)
@@ -50,8 +49,7 @@ export class FiscalOBligationsOrchestrator {
           for (const [_, event] of packageToProcess.events) {
             events.push(event)
           }
-
-          workerThread.postMessage(structData, events)
+          await workerThread.postMessage(structData, events)
         }
       }
     } catch(error) {
@@ -95,16 +93,6 @@ export class FiscalOBligationsOrchestrator {
   private getEventId(entryData: TFiscalOBligationsEntryData): string {
     if (entryData.event.obrigacao === E_OBRIGACAO.E_FINANCEIRA) return entryData.event.efinanceira!.idGov
     throw new Error('Layout ainda nao implementado')
-  }
-
-  private async awaitWorkerIsIdle(workerThread: IWorker<TFiscalOBligationsEntryData>): Promise<void> {
-    while(true) {
-        if(workerThread.workerIsBusy()) {
-          await sleep(200)
-          continue
-        }
-        break
-      }
   }
 
   private createKeyGroup(entryData: TFiscalOBligationsEntryData): string {

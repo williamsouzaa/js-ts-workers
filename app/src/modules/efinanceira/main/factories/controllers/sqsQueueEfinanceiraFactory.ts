@@ -13,44 +13,19 @@ import { WorkerFiscalOBligations } from "../../../../../shared/data/useCases/fis
 import { WorkerPoolFiscalOBligations } from "../../../../../shared/data/useCases/fiscalObligations/workers/WorkerPoolFiscalOBligartions.js"
 import { WorkerErrorEventHandler } from "../../../../../shared/data/useCases/application/workers/listeners/events/WorkerErrorEventHandler.js"
 import { WorkerExitEventHandler } from "../../../../../shared/data/useCases/application/workers/listeners/events/WorkerExitEventHandler.js"
-import { NodeHttpHandler } from "@smithy/node-http-handler";
-import https from "https";
-import http from "http";
+
 
 function getfiscalOBligationsEventsPackageFactory(): IFiscalObligationsEventsPackage {
   const fiscalOBligationsEventsPackage = new FiscalOBligationsEventsPackage()
-  fiscalOBligationsEventsPackage.setLimitPerPackage(2)
-  fiscalOBligationsEventsPackage.setTimeLimitToHoldingPackageInSecods(5)
+  fiscalOBligationsEventsPackage.setLimitPerPackage(100)
+  fiscalOBligationsEventsPackage.setTimeLimitToHoldingPackageInSecods(50)
   return fiscalOBligationsEventsPackage
-}
-
-
-
-function getInstanceAwsSkdSqsClient(): SQSClient {
-  return new SQSClient({
-    region: "us-east-1",
-    endpoint: process.env.AWS_SQS_QUEUE_ENDPOINT_EFINANCEIRA as string,
-    credentials: {
-      accessKeyId: "test",
-      secretAccessKey: "test"
-    },
-    requestHandler:  new NodeHttpHandler({
-      httpsAgent: new https.Agent({
-        maxSockets: 500,
-        keepAlive: true
-      }),
-      httpAgent: new http.Agent({
-        maxSockets: 500,
-        keepAlive: true
-      })
-    })
-  })
 }
 
 export async function sqsQueueEfinanceiraFactory(): Promise<IQueueController> {
   const sqsObrigacaoEfinanceira = new SQSClientAdapter()
   sqsObrigacaoEfinanceira.setAWSSQSQueueUrl(process.env.AWS_SQS_QUEUE_URL_EFINANCEIRA as string)
-  sqsObrigacaoEfinanceira.setAWSClientSQS(getInstanceAwsSkdSqsClient())
+  sqsObrigacaoEfinanceira.setAWSClientSQS(500)
 
   const fiscalOBligationsEventsPackage = getfiscalOBligationsEventsPackageFactory()
 
@@ -63,7 +38,7 @@ export async function sqsQueueEfinanceiraFactory(): Promise<IQueueController> {
       new WorkerExitEventHandler(),
   ))
 
-  await workerThreadManager.init("./dist/src/shared/data/useCases/fiscalObligations/workers/listeners/WorkerListenerToProcessFiscalOBligartions.js", 4)
+  await workerThreadManager.init("./dist/src/shared/data/useCases/fiscalObligations/workers/listeners/WorkerListenerToProcessFiscalOBligartions.js", 6)
   await sleep(5000)
   console.log('[LOG][INFO] - sqsQueueEfinanceiraFactory - workerThreadManager:', workerThreadManager)
 

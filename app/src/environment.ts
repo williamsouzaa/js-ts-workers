@@ -22,4 +22,8 @@ export const EFINANCEIRA = {
   CERT_GOV_FILE_NAME:  NODE_ENV === 'PROD' ? "efinanceira-producao.pem" : "efinanceira-homologacao.pem",
 
   BASE_PATH_CERT_COMPANYS : 'app/src/modules/efinanceira/infra/storage/certificates/company' as `app/${string}`,
+
+  CERT_PASSWORD: {
+    GENERIC_COMPANY: "ABC123456"
+  }
 }

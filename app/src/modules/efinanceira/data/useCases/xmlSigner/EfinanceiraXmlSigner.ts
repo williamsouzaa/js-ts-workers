@@ -1,17 +1,39 @@
 import { SignedXml } from 'xml-crypto';
+import forge from 'node-forge';
 import { IXmlSigner } from '../../../../../shared/domain/fiscalObligations/IXmlSigner.js';
 import { EFINANCEIRA } from '../../../../../environment.js';
 import { handleReadFileSync } from '../../../../../utils/handleReadFileSync.js';
 
 export class EfinanceiraXmlSigner implements IXmlSigner<{xmlData: string, idGov: string}> {
-  private readonly privateKey: string;
-  private readonly publicCertClean: string;
+  private privateKey!: string;
+  private publicCertClean!: string;
 
   constructor() {
-    this.privateKey = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_COMPANYS + '/generic' as `app/${string}`, 'chave_privada.pem')
-    const publicCert = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_COMPANYS + '/generic' as `app/${string}`, 'certificado_publico.pem')
+    const p12Asn1 = this.convertPfxFileBufferToFormatCompatibleToNodeForge()
+    const p12: forge.pkcs12.Pkcs12Pfx = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, EFINANCEIRA.CERT_PASSWORD.GENERIC_COMPANY);
+    this.setPrivateKeyGetInPFXFileAndConvertingToPem(p12)
+    this.setPublicCertPemGetInPFXFileAndConvertingToPem(p12)
+  }
 
-    this.publicCertClean = publicCert
+  private convertPfxFileBufferToFormatCompatibleToNodeForge(): forge.asn1.Asn1 {
+    const pfxBuffer = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_COMPANYS + '/generic' as `app/${string}`, 'certificado_empresa.pfx', false) as Buffer<ArrayBuffer>
+    const p12Der = forge.util.decode64(pfxBuffer.toString('base64'));
+    return forge.asn1.fromDer(p12Der);
+  }
+
+  private setPrivateKeyGetInPFXFileAndConvertingToPem(p12: forge.pkcs12.Pkcs12Pfx): void {
+    const keyBags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
+    const forgePrivateKey = keyBags[forge.pki.oids.pkcs8ShroudedKeyBag!]?.[0]?.key;
+    if (!forgePrivateKey) throw new Error("Chave privada não encontrada no arquivo PFX.");
+    this.privateKey = forge.pki.privateKeyToPem(forgePrivateKey);
+  }
+
+  private setPublicCertPemGetInPFXFileAndConvertingToPem(p12: forge.pkcs12.Pkcs12Pfx): void {
+    const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
+    const forgeCert = certBags[forge.pki.oids.certBag!]?.[0]?.cert;
+    if (!forgeCert) throw new Error("Certificado público não encontrado no arquivo PFX.");
+    const publicCertPem = forge.pki.certificateToPem(forgeCert);
+    this.publicCertClean = publicCertPem
       .replace(/-----BEGIN CERTIFICATE-----/g, '')
       .replace(/-----END CERTIFICATE-----/g, '')
       .replace(/\r?\n|\r/g, '');
@@ -34,8 +56,7 @@ export class EfinanceiraXmlSigner implements IXmlSigner<{xmlData: string, idGov:
       digestAlgorithm: 'http://www.w3.org/2001/04/xmlenc#sha256'
     });
 
-    sig.computeSignature(data.xmlData)
-
-    return sig.getSignedXml()
+    sig.computeSignature(data.xmlData);
+    return sig.getSignedXml();
   }
 }

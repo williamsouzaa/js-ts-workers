@@ -11,14 +11,13 @@ export enum E_WORKER_STATE {
 export interface IWorker<TEntryData> {
   readonly id: number
   readonly name: string
-  readonly state: E_WORKER_STATE
   readonly worker: ChildProcess
 
   handle(id: number, name: string, pathWorkerFile: string): Promise<void>
-  changeStateTo(state: E_WORKER_STATE): void
-  workerIsBusy(): boolean
-  workerIsOffline(): boolean
-  workerIsIdle(): boolean
+  // changeStateTo(state: E_WORKER_STATE): void
+  // workerIsBusy(): boolean
+  // workerIsOffline(): boolean
+  // workerIsIdle(): boolean
   postMessage(structData: TWorkerListenerStructData<TEntryData>, bufferData: any): Promise<void>
 
 }

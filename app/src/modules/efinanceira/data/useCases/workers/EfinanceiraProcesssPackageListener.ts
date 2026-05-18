@@ -6,10 +6,10 @@ import { E_OBRIGACAO_CODIGO_LAYOUT, E_WORKER_PROCESS } from "../../../../../shar
 import { TEventEfinanceira, TFiscalOBligationsEntryData } from "../../../../../shared/domain/fiscalObligations/TFiscalOBligartionsEntryData.js";
 import { IXmlSigner } from "../../../../../shared/domain/fiscalObligations/IXmlSigner.js";
 import { ICreateBatchEvents } from "../../../../../shared/domain/fiscalObligations/ICreateBatchEvents.js";
-import fs from 'fs'
 import { IWorkerListener, TWorkerListenerStructData } from "../../../../../shared/data/interfaces/application/workers/IWorkerListener.js";
 import { IDeleteBatchMessagesInQueue } from "../../../../../shared/data/interfaces/application/queue/IDeleteBatchMessagesInQueue.js";
 import { TQueueMessage } from "../../../../../shared/data/interfaces/application/queue/TQueueMessage.js";
+import fs from 'fs'
 
 
 export class EfinanceiraProcesssPackageListener implements IWorkerListener<Array<TFiscalOBligationsEntryData>> {
@@ -20,7 +20,7 @@ export class EfinanceiraProcesssPackageListener implements IWorkerListener<Array
     private xmlSigner: IXmlSigner<{xmlData: string, idGov: string}>,
     private createBatchXml: ICreateBatchEvents<Array<{idGov: string, xmlSigned: string}>>,
     private deleteBatchMessagesInQueue: IDeleteBatchMessagesInQueue,
-  ){}
+  ) {}
 
   public async handle(structData: TWorkerListenerStructData<Array<TFiscalOBligationsEntryData>>): Promise<void> {
     try {
@@ -37,8 +37,8 @@ export class EfinanceiraProcesssPackageListener implements IWorkerListener<Array
       const dataToProcess = this.handleToBuilDataToProcess(structData)
       const errors: Array<string> = new Array()
       const signedXmls: Array<{idGov: string, xmlSigned: string}> = new Array()
-      const queueMessagesToDelete: Array<Omit<TQueueMessage, 'body'>> = new Array()
       const redisEventsToDelete: Array<string> = new Array()
+      const queueMessagesToDelete: Array<Omit<TQueueMessage, 'body'>> = new Array()
 
       for (const event of dataToProcess.entryData!) {
         try {
@@ -65,7 +65,7 @@ export class EfinanceiraProcesssPackageListener implements IWorkerListener<Array
         fs.appendFileSync(`./output_ids_${structData.worker?.id}.txt`, `${new Date()} - ${el}\n`);
       }
 
-      await this.deleteBatchMessagesInQueue.deleteMessagesBatch(queueMessagesToDelete)
+      // await this.deleteBatchMessagesInQueue.deleteMessagesBatch(queueMessagesToDelete)
       this.postMessageToMainThread(structData, redisEventsToDelete)
   }
 

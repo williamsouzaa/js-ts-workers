@@ -24,9 +24,7 @@ export abstract class AWorkersPool<EntryData> implements IWorkersPool<EntryData>
 
   public async stopAll(): Promise<void> {
     for(const [_, workerThreadInstance] of this.workerThreadsPool) {
-      // child_process uses kill() instead of worker_threads' terminate()
       workerThreadInstance.worker.kill()
-      workerThreadInstance.changeStateTo(E_WORKER_STATE.OFFLINE)
       console.log('[LOG][INFO] - WorkerManager - stopAll - sucesso')
     }
   }
@@ -34,15 +32,7 @@ export abstract class AWorkersPool<EntryData> implements IWorkersPool<EntryData>
   public async stopById(id: number): Promise<void> {
     const workerThreadInstance = this.workerThreadsPool.get(id)
     workerThreadInstance!.worker.kill()
-    workerThreadInstance!.changeStateTo(E_WORKER_STATE.OFFLINE)
     console.log('[LOG][INFO] - WorkerManager - stopById - sucesso')
-  }
-
-  public allWorkersIsBusy(): boolean {
-    for(const [_, workerThread] of this.workerThreadsPool) {
-      if (!workerThread.workerIsBusy()) return false
-    }
-    return true
   }
 }
 

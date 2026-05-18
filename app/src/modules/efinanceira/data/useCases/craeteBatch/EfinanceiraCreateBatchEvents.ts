@@ -2,13 +2,14 @@ import { ICreateBatchEvents } from "../../../../../shared/domain/fiscalObligatio
 import * as crypto from 'crypto';
 import { EFINANCEIRA } from "../../../../../environment.js";
 import { handleReadFileSync } from "../../../../../utils/handleReadFileSync.js";
+import zlib from 'zlib';
 
 
 export class EfinanceiraCreateBatchEvents implements ICreateBatchEvents<Array<{idGov: string, xmlSigned: string}>> {
   private readonly certGov: string
 
   constructor() {
-    this.certGov = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_GOV, EFINANCEIRA.CERT_GOV_FILE_NAME)
+    this.certGov = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_GOV, EFINANCEIRA.CERT_GOV_FILE_NAME) as string
   }
 
   public async handle(data: { idGov: string; xmlSigned: string; }[]): Promise<string> {
@@ -25,12 +26,16 @@ export class EfinanceiraCreateBatchEvents implements ICreateBatchEvents<Array<{i
       xmlRawBatch += `  </loteEventos>\n`;
       xmlRawBatch += `</eFinanceira>`;
 
+      const gzippedBatchBuffer = zlib.gzipSync(Buffer.from(xmlRawBatch, 'utf8'));
+
       const aesKey = crypto.randomBytes(16);
       const aesIv = crypto.randomBytes(16);
 
       const cipher = crypto.createCipheriv('aes-128-cbc', aesKey, aesIv);
-      let cryptoBatchBase64 = cipher.update(xmlRawBatch, 'utf8', 'base64');
-      cryptoBatchBase64 += cipher.final('base64');
+      const cryptoBatchBuffer = cipher.update(gzippedBatchBuffer);
+      const cryptoBatchFinal = cipher.final();
+
+      const cryptoBatchBase64 = Buffer.concat([cryptoBatchBuffer, cryptoBatchFinal]).toString('base64');
 
       const cryptoKeyBuffer = crypto.publicEncrypt(
         {
@@ -39,6 +44,7 @@ export class EfinanceiraCreateBatchEvents implements ICreateBatchEvents<Array<{i
         },
         Buffer.concat([aesKey, aesIv])
       );
+
       const cryptoKeyBufferBase64 = cryptoKeyBuffer.toString('base64');
 
 return `<?xml version="1.0" encoding="utf-8"?>

@@ -6,7 +6,7 @@ class App {
   public async handle(): Promise<void> {
     console.log('[LOG][INFO] - App - handle - start')
 
-    this.databases()
+    await this.databases()
     const sqsQueueControllerList = await queueControllerFactory()
 
     while(true) {

@@ -10,8 +10,8 @@ export class LibxmljsEfinanceiraValidateXmlWithXsdAdapter implements IValidateXm
   private evtAberturaeFinanceiraXsd!: Document
 
   constructor() {
-    this.evtMovOpFinXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtMovOpFin.xsd'))
-    this.evtAberturaeFinanceiraXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtAberturaeFinanceira.xsd'))
+    this.evtMovOpFinXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtMovOpFin.xsd') as string)
+    this.evtAberturaeFinanceiraXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtAberturaeFinanceira.xsd') as string)
   }
 
   public async handle(data: { layoutCode: E_OBRIGACAO_CODIGO_LAYOUT; xmlData: string; }): Promise<boolean> {
