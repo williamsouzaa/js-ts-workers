@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redis Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">Redis Dashboard</span>
+      </div>
+      <div class="header-actions">
+        <button class="refresh-btn" id="refreshBtn" title="Atualizar">↻</button>
+        <button class="clear-btn" id="clearBtn" title="Limpar tudo">🗑</button>
+      </div>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat"><span class="stat-value" id="statGroups">—</span><span class="stat-label">Grupos</span></div>
+      <div class="stat"><span class="stat-value" id="statPackages">—</span><span class="stat-label">Pacotes</span></div>
+      <div class="stat"><span class="stat-value" id="statEvents">—</span><span class="stat-label">Eventos</span></div>
+    </div>
+
+    <div class="search-wrap">
+      <input class="search" id="searchInput" type="text" placeholder="Filtrar por CNPJ, layout, módulo…" />
+    </div>
+
+    <nav class="group-list" id="groupList"></nav>
+  </aside>
+
+  <main class="main">
+    <div class="breadcrumb" id="breadcrumb"></div>
+    <div class="content" id="content">
+      <div class="empty-state">
+        <p>Selecione um grupo na barra lateral.</p>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modalTitle"></span>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <pre class="modal-body" id="modalBody"></pre>
+    </div>
+  </div>
+
+  <div class="confirm-overlay hidden" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-icon">⚠️</div>
+      <h3>Limpar todos os dados?</h3>
+      <p>Todos os pacotes e eventos serão removidos do Redis.<br>Esta ação não pode ser desfeita.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" id="confirmCancel">Cancelar</button>
+        <button class="btn-danger" id="confirmOk">Limpar tudo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

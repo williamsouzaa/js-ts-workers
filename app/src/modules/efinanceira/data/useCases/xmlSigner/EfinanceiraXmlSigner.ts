@@ -1,7 +1,7 @@
 import { SignedXml } from 'xml-crypto';
 import forge from 'node-forge';
-import { IXmlSigner } from '../../../../../shared/domain/fiscalObligations/IXmlSigner.js';
-import { EFINANCEIRA } from '../../../../../environment.js';
+import { IXmlSigner } from '../../../../../core/domain/fiscalObligations/IXmlSigner.js';
+import { CERT } from '../../../../../environment.js';
 import { handleReadFileSync } from '../../../../../utils/handleReadFileSync.js';
 
 export class EfinanceiraXmlSigner implements IXmlSigner<{xmlData: string, idGov: string}> {
@@ -10,13 +10,13 @@ export class EfinanceiraXmlSigner implements IXmlSigner<{xmlData: string, idGov:
 
   constructor() {
     const p12Asn1 = this.convertPfxFileBufferToFormatCompatibleToNodeForge()
-    const p12: forge.pkcs12.Pkcs12Pfx = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, EFINANCEIRA.CERT_PASSWORD.GENERIC_COMPANY);
+    const p12: forge.pkcs12.Pkcs12Pfx = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, CERT.EFINANCEIRA.GENERIC_COMPANY.CERT_PASSWORD);
     this.setPrivateKeyGetInPFXFileAndConvertingToPem(p12)
     this.setPublicCertPemGetInPFXFileAndConvertingToPem(p12)
   }
 
   private convertPfxFileBufferToFormatCompatibleToNodeForge(): forge.asn1.Asn1 {
-    const pfxBuffer = handleReadFileSync(EFINANCEIRA.BASE_PATH_CERT_COMPANYS + '/generic' as `app/${string}`, 'certificado_empresa.pfx', false) as Buffer<ArrayBuffer>
+    const pfxBuffer = handleReadFileSync(CERT.EFINANCEIRA.GENERIC_COMPANY.CERT_BASE_PATH + '/generic' as `app/${string}`, 'certificado_empresa.pfx', false) as Buffer<ArrayBuffer>
     const p12Der = forge.util.decode64(pfxBuffer.toString('base64'));
     return forge.asn1.fromDer(p12Der);
   }

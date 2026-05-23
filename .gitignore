@@ -10,3 +10,4 @@ dist
 .metals/
 localstack_data
 ./localstack_data
+.claude

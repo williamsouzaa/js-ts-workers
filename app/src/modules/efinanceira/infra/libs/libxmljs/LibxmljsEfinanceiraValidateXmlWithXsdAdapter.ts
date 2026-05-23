@@ -1,28 +1,28 @@
 import libxmljs, {Document} from 'libxmljs2'
-import { IValidateXmlWithXsd } from '../../../../../shared/domain/fiscalObligations/IValidateXmlWithXsd.js'
-import { E_OBRIGACAO_CODIGO_LAYOUT } from '../../../../../shared/domain/fiscalObligations/names.js'
+import { IValidateXmlWithXsd } from '../../../../../core/domain/fiscalObligations/IValidateXmlWithXsd.js'
 import { handleReadFileSync } from '../../../../../utils/handleReadFileSync.js'
-import { EFINANCEIRA } from '../../../../../environment.js'
+import { EFINANCEIRA, LAYOUTS_XSD } from '../../../../../environment.js'
+import { E_OBRIGACOES_CODIGO_LAYOUT } from '../../../../../core/domain/fiscalObligations/names.js'
 
 
-export class LibxmljsEfinanceiraValidateXmlWithXsdAdapter implements IValidateXmlWithXsd<{layoutCode: E_OBRIGACAO_CODIGO_LAYOUT, xmlData: string}> {
+export class LibxmljsEfinanceiraValidateXmlWithXsdAdapter implements IValidateXmlWithXsd<{layoutCode: string, xmlData: string}> {
   private evtMovOpFinXsd!: Document
   private evtAberturaeFinanceiraXsd!: Document
 
   constructor() {
-    this.evtMovOpFinXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtMovOpFin.xsd') as string)
-    this.evtAberturaeFinanceiraXsd = libxmljs.parseXml(handleReadFileSync(EFINANCEIRA.BASE_PATH_LAYOUTS_XSD, 'evtAberturaeFinanceira.xsd') as string)
+    this.evtMovOpFinXsd = libxmljs.parseXml(handleReadFileSync(LAYOUTS_XSD.EFINANCEIRA.BASE_PATH, 'evtMovOpFin.xsd') as string)
+    this.evtAberturaeFinanceiraXsd = libxmljs.parseXml(handleReadFileSync(LAYOUTS_XSD.EFINANCEIRA.BASE_PATH, 'evtAberturaeFinanceira.xsd') as string)
   }
 
-  public async handle(data: { layoutCode: E_OBRIGACAO_CODIGO_LAYOUT; xmlData: string; }): Promise<boolean> {
+  public async handle(data: { layoutCode: string; xmlData: string; }): Promise<boolean> {
     const xmlDoc = libxmljs.parseXml(data.xmlData)
 
     let isValid
     switch (data.layoutCode) {
-      case E_OBRIGACAO_CODIGO_LAYOUT.EFINANCEIRA_ABERTURA:
+      case E_OBRIGACOES_CODIGO_LAYOUT.EFINANCEIRA_ABERTURA:
         isValid = xmlDoc.validate(this.evtAberturaeFinanceiraXsd)
         break
-      case E_OBRIGACAO_CODIGO_LAYOUT.EFINANCEIRA_MOVIMENTACAO_FINACEIRA:
+      case E_OBRIGACOES_CODIGO_LAYOUT.EFINANCEIRA_MOVIMENTACAO_FINANCEIRA:
         isValid = xmlDoc.validate(this.evtMovOpFinXsd)
         break
       default:

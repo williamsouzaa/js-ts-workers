@@ -1,0 +1,13 @@
+{
+  "name": "redis-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard para visualização dos dados no Redis",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=../.env server.js"
+  },
+  "dependencies": {
+    "redis": "^5.12.1"
+  }
+}
